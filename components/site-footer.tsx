@@ -33,39 +33,47 @@ export function SiteFooter({ dictionary, locale }: SiteFooterProps) {
             </span>
             <ul className="editorial-footer__list">
               <li>
-                <Link href={`/${locale}#collection`}>{dictionary.nav.collection}</Link>
+                <Link href={`/${locale}/collection`}>{dictionary.nav.collection}</Link>
               </li>
               <li>
                 <Link href={`/${locale}/model-01`}>{dictionary.nav.model01}</Link>
               </li>
               <li>
-                <Link href={`/${locale}#statement`}>{dictionary.nav.atelier}</Link>
+                <Link href={`/${locale}/model-02`}>{dictionary.nav.model02}</Link>
               </li>
               <li>
-                <Link href={`/${locale}#tones`}>{dictionary.nav.tones}</Link>
-              </li>
-              <li>
-                <Link href={`/${locale}#concierge`}>{dictionary.nav.concierge}</Link>
+                <Link href={`/${locale}/model-03`}>{dictionary.nav.model03}</Link>
               </li>
             </ul>
           </div>
 
           <div className="editorial-footer__col">
             <span className="mono-label editorial-footer__col-label">
-              [ {dictionary.footer.legalTitle} ]
+              [ {locale === "ar" ? "الخدمات والتواصل" : "SERVICES & CONTACT"} ]
             </span>
             <ul className="editorial-footer__list">
               <li>
-                <span className="editorial-footer__link-item">{dictionary.footer.legalLinks.sizing}</span>
+                <Link href={`/${locale}#order-process`}>
+                  {locale === "ar" ? "خطوات الطلب" : "Parcours de Commande"}
+                </Link>
               </li>
               <li>
-                <span className="editorial-footer__link-item">{dictionary.footer.legalLinks.shipping}</span>
+                <Link href={`/${locale}#story`}>
+                  {locale === "ar" ? "رؤية الدار" : "Philosophie de Maison"}
+                </Link>
               </li>
               <li>
-                <span className="editorial-footer__link-item">{dictionary.footer.legalLinks.terms}</span>
+                <a
+                  href="https://wa.me/212689532341"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="editorial-footer__link-item"
+                >
+                  {locale === "ar" ? "واتساب : 2341 532 689 212+" : "WhatsApp : +212 689 532 341"}
+                </a>
               </li>
               <li>
-                <span className="editorial-footer__link-item">{dictionary.footer.legalLinks.privacy}</span>
+                <Link href={`/${locale}#concierge`}>{dictionary.nav.concierge}</Link>
               </li>
             </ul>
           </div>

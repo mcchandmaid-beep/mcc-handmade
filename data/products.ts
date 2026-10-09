@@ -75,7 +75,7 @@ const model01Availability = (): Readonly<Record<string, AvailabilityStatus>> => 
 
 export const model01: Product = {
   id: "model-01",
-  name: { fr: "Ensemble Sport", ar: "طقم سبور" },
+  name: { fr: "Ensemble sport femme", ar: "بدلة رياضية نسائية" },
   price: {
     amount: 249,
     currency: { fr: "DH", ar: "درهم" },

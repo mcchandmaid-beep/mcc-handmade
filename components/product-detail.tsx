@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Product, SizeOption } from "@/data/products";
-import { getLocalizedField, formatPrice } from "@/data/products";
+import { getLocalizedField, formatPrice, allProducts } from "@/data/products";
 import { formatMessage, type Dictionary } from "@/lib/dictionaries";
 import type { Locale } from "@/lib/i18n";
 import { WhatsAppOrderModal } from "@/components/whatsapp-order-modal";
@@ -361,6 +361,10 @@ export function ProductDetail({ dictionary, locale, product }: ProductDetailProp
                 </span>
               </button>
 
+              <p className="product-order-note mono-label">
+                [ {isArabic ? "تواصل وتأكيد فوري عبر واتساب · 2341 532 689 212+" : "COMMANDE DIRECTE SUR WHATSAPP · +212 689 532 341"} ]
+              </p>
+
               {selectionError && (
                 <p className="product-selection-error" role="alert">
                   {selectionError}
@@ -444,6 +448,80 @@ export function ProductDetail({ dictionary, locale, product }: ProductDetailProp
           )}
         </aside>
       </section>
+
+      {/* Internal Navigation: Other Pieces in the Collection */}
+      <section
+        className="product-related-section"
+        aria-label={isArabic ? "تصاميم أخرى في المجموعة" : "Autres pièces de la collection"}
+      >
+        <div className="product-related__header">
+          <span className="mono-label">
+            [ {isArabic ? "استكشفي أيضاً في المجموعة" : "DANS LA MÊME COLLECTION"} ]
+          </span>
+          <Link href={`/${locale}/collection`} className="mono-label product-related__all-link">
+            <span>{isArabic ? "عرض كل المجموعة" : "TOUTE LA COLLECTION"}</span>
+            <span aria-hidden="true">{isArabic ? "←" : "→"}</span>
+          </Link>
+        </div>
+
+        <div className="product-related__grid">
+          {allProducts
+            .filter((p) => p.id !== product.id)
+            .map((otherProduct) => {
+              const otherVariant = otherProduct.colourVariants[0]!;
+              const otherImg = otherVariant.images[0]!;
+              return (
+                <article key={otherProduct.id} className="product-related-card">
+                  <Link
+                    href={`/${locale}/${otherProduct.id}`}
+                    className="product-related-card__media-link"
+                    aria-label={`${getLocalizedField(otherProduct.name, locale)} — ${formatPrice(otherProduct, locale)}`}
+                  >
+                    <div className="product-related-card__media">
+                      <Image
+                        src={otherImg.src}
+                        alt={`${getLocalizedField(otherProduct.name, locale)} — MCC Handmade`}
+                        fill
+                        className="product-related-card__image"
+                        sizes="(max-width: 768px) 50vw, 30vw"
+                        loading="lazy"
+                      />
+                    </div>
+                  </Link>
+                  <div className="product-related-card__info">
+                    <h3 className="product-related-card__title">
+                      <Link href={`/${locale}/${otherProduct.id}`}>
+                        {getLocalizedField(otherProduct.name, locale)}
+                      </Link>
+                    </h3>
+                    <span className="mono-label product-related-card__price">
+                      {formatPrice(otherProduct, locale)}
+                    </span>
+                  </div>
+                </article>
+              );
+            })}
+        </div>
+      </section>
+
+      {/* Sticky Mobile Purchase Bar */}
+      <div className="product-mobile-bar" aria-label="Action rapide mobile">
+        <div className="product-mobile-bar__info">
+          <span className="product-mobile-bar__title">
+            {getLocalizedField(product.name, locale)}
+          </span>
+          <span className="product-mobile-bar__price mono-label">
+            {formatPrice(product, locale)}
+          </span>
+        </div>
+        <button
+          className="action-btn action-btn--primary product-mobile-bar__btn"
+          onClick={handleOrderClick}
+          type="button"
+        >
+          <span>{dictionary.whatsapp.orderCTA}</span>
+        </button>
+      </div>
 
       {/* Reusable WhatsApp Order Flow Modal */}
       {selectedSize && (

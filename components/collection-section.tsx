@@ -68,7 +68,7 @@ export function CollectionSection({ dictionary, locale }: CollectionSectionProps
         </span>
       </div>
 
-      <div className="collection-section__intro">
+      <div className="collection-section__intro reveal-on-scroll">
         <h2 id="collection-title" className="collection-section__main-title">
           {isArabic ? "ثلاثة تصاميم. ثلاثة تعبيرات عن الوقار والأناقة." : "TROIS SILHOUETTES. TROIS EXPRESSIONS DE L'ALLURE."}
         </h2>
@@ -82,7 +82,7 @@ export function CollectionSection({ dictionary, locale }: CollectionSectionProps
       {/* Editorial Three-Piece Curation */}
       <div className="collection-pieces-grid">
         {/* Piece 01: Modèle 01 */}
-        <article className="collection-piece-card" data-cursor="discover">
+        <article className="collection-piece-card reveal-on-scroll reveal-delay-1" data-cursor="discover">
           <Link
             href={`/${locale}/model-01`}
             className="collection-piece-card__media-wrap"
@@ -144,7 +144,7 @@ export function CollectionSection({ dictionary, locale }: CollectionSectionProps
         </article>
 
         {/* Piece 02: Model 02 — Ensemble Capuche */}
-        <article className="collection-piece-card" data-cursor="discover">
+        <article className="collection-piece-card reveal-on-scroll reveal-delay-2" data-cursor="discover">
           <Link
             href={`/${locale}/model-02`}
             className="collection-piece-card__media-wrap"
@@ -208,7 +208,7 @@ export function CollectionSection({ dictionary, locale }: CollectionSectionProps
         </article>
 
         {/* Piece 03: Model 03 — Robe-Tunique Longue Casual */}
-        <article className="collection-piece-card" data-cursor="discover">
+        <article className="collection-piece-card reveal-on-scroll reveal-delay-3" data-cursor="discover">
           <Link
             href={`/${locale}/model-03`}
             className="collection-piece-card__media-wrap"

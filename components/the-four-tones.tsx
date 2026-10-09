@@ -36,7 +36,7 @@ export function TheFourTones({ dictionary, locale, product }: TheFourTonesProps)
       id="tones"
     >
       {/* Top Hairline Header */}
-      <div className="four-tones-exhibition__top-bar">
+      <div className="four-tones-exhibition__top-bar reveal-on-scroll">
         <div className="four-tones-exhibition__top-left">
           <span className="mono-label">[ {dictionary.tones.eyebrow} ]</span>
           <h2 id="tones-title" className="four-tones-exhibition__title">
@@ -50,7 +50,7 @@ export function TheFourTones({ dictionary, locale, product }: TheFourTonesProps)
 
       {/* 4-Column Interactive Exhibition (Desktop Accordion Expansion & Mobile Snap) */}
       <div
-        className={`four-tones-exhibition__grid ${hoveredToneId ? "four-tones-exhibition__grid--has-hover" : ""}`}
+        className={`four-tones-exhibition__grid reveal-on-scroll ${hoveredToneId ? "four-tones-exhibition__grid--has-hover" : ""}`}
         onMouseLeave={() => setHoveredToneId(null)}
         onScroll={handleMobileScroll}
         ref={gridRef}

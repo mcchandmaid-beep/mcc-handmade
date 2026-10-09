@@ -5,10 +5,12 @@ import { MccHeader } from "@/components/mcc-header";
 import { SiteFooter } from "@/components/site-footer";
 import { getDictionary } from "@/lib/dictionaries";
 import { getDirection, isLocale, locales } from "@/lib/i18n";
+import { getPublicBaseUrl } from "@/lib/whatsapp";
+import { ScrollReveal } from "@/components/scroll-reveal";
 import "../globals.css";
 
 export const metadata = {
-  metadataBase: new URL("https://mcchandmade.com"),
+  metadataBase: new URL(getPublicBaseUrl()),
 };
 
 export function generateStaticParams() {
@@ -30,6 +32,7 @@ export default async function LocaleLayout({
     <html dir={getDirection(locale)} lang={locale} suppressHydrationWarning>
       <body>
         <CustomCursor />
+        <ScrollReveal />
         <MccHeader dictionary={dictionary} locale={locale} />
         {children}
         <SiteFooter dictionary={dictionary} locale={locale} />

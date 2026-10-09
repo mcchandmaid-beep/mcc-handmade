@@ -19,11 +19,12 @@ export async function generateMetadata({ params }: CollectionPageProps): Promise
   const locale: Locale = isLocale(localeParam) ? localeParam : "fr";
   const dictionary = getDictionary(locale);
 
-  const title = `MCC Handmade — ${dictionary.nav.collection}`;
+  const title = dictionary.meta.collectionTitle || `MCC Handmade — ${dictionary.nav.collection}`;
   const description =
-    locale === "ar"
+    dictionary.meta.collectionDescription ||
+    (locale === "ar"
       ? "المجموعة الدائمة لمخزن MCC Handmade للأزياء المحتشمة المعاصرة. ثلاثة تصاميم أصيلة بصياغة متقنة."
-      : "Collection permanente MCC Handmade. Vestiaire modeste contemporain incarné par le Modèle 01, l'Ensemble Capuche et la Robe-Tunique Longue Casual.";
+      : "Collection permanente MCC Handmade. Vestiaire modeste contemporain incarné par le Modèle 01, l'Ensemble Capuche et la Robe-Tunique Longue Casual.");
 
   return {
     title,
@@ -34,6 +35,27 @@ export async function generateMetadata({ params }: CollectionPageProps): Promise
         fr: "/fr/collection",
         ar: "/ar/collection",
       },
+    },
+    openGraph: {
+      title,
+      description,
+      url: `/${locale}/collection`,
+      locale: locale === "ar" ? "ar_AR" : "fr_FR",
+      type: "website",
+      images: [
+        {
+          url: "/products/model-01/burgundy-01.png",
+          width: 928,
+          height: 1695,
+          alt: title,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: ["/products/model-01/burgundy-01.png"],
     },
   };
 }
@@ -46,8 +68,29 @@ export default async function CollectionPage({ params }: CollectionPageProps) {
   const dictionary = getDictionary(locale);
   const isArabic = locale === "ar";
 
+  const breadcrumbs = [
+    { name: isArabic ? "الرئيسية" : "Accueil", path: "" },
+    { name: dictionary.nav.collection, path: "/collection" },
+  ];
+
   return (
     <main className="collection-page">
+      {/* JSON-LD Breadcrumb Schema */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            itemListElement: breadcrumbs.map((b, i) => ({
+              "@type": "ListItem",
+              position: i + 1,
+              name: b.name,
+              item: `https://mcc-handmade.vercel.app/${locale}${b.path}`,
+            })),
+          }),
+        }}
+      />
       {/* Header Banner */}
       <section className="collection-hero">
         <div className="collection-hero__inner">

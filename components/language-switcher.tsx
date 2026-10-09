@@ -8,10 +8,10 @@ interface LanguageSwitcherProps {
   label: string;
 }
 
-const localeLabels: Record<Locale, string> = {
-  fr: "FR",
-  ar: "العربية",
-};
+const localesConfig: ReadonlyArray<{ code: Locale; label: string; ariaLabel: string }> = [
+  { code: "fr", label: "FR", ariaLabel: "Version française" },
+  { code: "ar", label: "العربية", ariaLabel: "النسخة العربية" },
+];
 
 export function LanguageSwitcher({ locale, label }: LanguageSwitcherProps) {
   const pathname = usePathname();
@@ -25,20 +25,28 @@ export function LanguageSwitcher({ locale, label }: LanguageSwitcherProps) {
   }
 
   return (
-    <div className="language-switcher" aria-label={label} dir="ltr">
-      {(["fr", "ar"] as const).map((option, index) => (
-        <span className="language-switcher__item" key={option}>
-          {index > 0 && <span aria-hidden="true">|</span>}
+    <div
+      className="lang-segmented"
+      aria-label={label}
+      role="group"
+      dir="ltr"
+    >
+      {localesConfig.map((item) => {
+        const isActive = locale === item.code;
+        return (
           <button
-            aria-pressed={locale === option}
-            lang={option}
+            key={item.code}
+            aria-pressed={isActive}
+            aria-label={item.ariaLabel}
+            className={`lang-segmented__btn ${isActive ? "lang-segmented__btn--active" : ""}`}
+            lang={item.code}
+            onClick={() => changeLocale(item.code)}
             type="button"
-            onClick={() => changeLocale(option)}
           >
-            {localeLabels[option]}
+            <span>{item.label}</span>
           </button>
-        </span>
-      ))}
+        );
+      })}
     </div>
   );
 }

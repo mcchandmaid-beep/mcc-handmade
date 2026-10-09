@@ -31,7 +31,7 @@ export function ClientConcierge({ dictionary, locale }: ClientConciergeProps) {
 
       <div className="client-concierge__grid">
         {/* Left Column: Direct Atelier Inquiries */}
-        <div className="client-concierge__inquiry-col">
+        <div className="client-concierge__inquiry-col reveal-on-scroll reveal-delay-1">
           <h2 id="concierge-title" className="client-concierge__title">
             {dictionary.concierge.title}
           </h2>
@@ -53,7 +53,7 @@ export function ClientConcierge({ dictionary, locale }: ClientConciergeProps) {
         </div>
 
         {/* Right Column: Private Gazette / Newsletter */}
-        <div className="client-concierge__newsletter-col">
+        <div className="client-concierge__newsletter-col reveal-on-scroll reveal-delay-2">
           <div className="concierge-card">
             <span className="mono-label">[ GAZETTE ÉDITORIALE ]</span>
             <h3 className="concierge-card__title">

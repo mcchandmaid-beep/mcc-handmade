@@ -43,7 +43,7 @@ export function MccHeader({ dictionary, locale }: MccHeaderProps) {
   return (
     <header className={`site-header ${isScrolled ? "site-header--scrolled" : ""}`}>
       <div className="site-header__inner">
-        {/* Left: Nav items on desktop, menu toggle on mobile */}
+        {/* Left: Nav items on desktop */}
         <nav className="site-nav" aria-label="Navigation principale">
           <ul className="site-nav__list">
             <li>
@@ -52,22 +52,34 @@ export function MccHeader({ dictionary, locale }: MccHeaderProps) {
               </Link>
             </li>
             <li>
-              <Link href={`/${locale}/model-01`} className="site-nav__link">
-                {dictionary.nav.model01}
+              <Link
+                href={`/${locale}/model-01`}
+                className="site-nav__link"
+                title={dictionary.nav.model01}
+              >
+                {locale === "ar" ? "الموديل 01" : "Modèle 01"}
               </Link>
             </li>
             <li>
-              <Link href={`/${locale}/model-02`} className="site-nav__link">
-                {dictionary.nav.model02}
+              <Link
+                href={`/${locale}/model-02`}
+                className="site-nav__link"
+                title={dictionary.nav.model02}
+              >
+                {locale === "ar" ? "الموديل 02" : "Modèle 02"}
               </Link>
             </li>
             <li>
-              <Link href={`/${locale}/model-03`} className="site-nav__link">
-                {dictionary.nav.model03}
+              <Link
+                href={`/${locale}/model-03`}
+                className="site-nav__link"
+                title={dictionary.nav.model03}
+              >
+                {locale === "ar" ? "الموديل 03" : "Modèle 03"}
               </Link>
             </li>
             <li>
-              <Link href={`/${locale}#statement`} className="site-nav__link">
+              <Link href={`/${locale}#atelier`} className="site-nav__link">
                 {dictionary.nav.atelier}
               </Link>
             </li>
@@ -103,8 +115,19 @@ export function MccHeader({ dictionary, locale }: MccHeaderProps) {
           </Link>
         </div>
 
-        {/* Right: Language switch + Mobile toggle */}
+        {/* Right: Language switch + WhatsApp order action + Mobile toggle */}
         <div className="site-header__actions">
+          <a
+            href="https://wa.me/212689532341"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="header-whatsapp-btn mono-label"
+            aria-label={locale === "ar" ? "طلب عبر واتساب" : "Commander sur WhatsApp"}
+          >
+            <span className="header-whatsapp-btn__dot" aria-hidden="true" />
+            <span>{locale === "ar" ? "واتساب" : "WHATSAPP"}</span>
+          </a>
+
           <LanguageSwitcher label={dictionary.languageSwitcherLabel} locale={locale} />
 
           <button
@@ -168,7 +191,7 @@ export function MccHeader({ dictionary, locale }: MccHeaderProps) {
             </li>
             <li className="mobile-nav__item">
               <span className="mono-label mobile-nav__idx">05</span>
-              <Link href={`/${locale}#statement`} className="mobile-nav__link" onClick={closeMenu}>
+              <Link href={`/${locale}#atelier`} className="mobile-nav__link" onClick={closeMenu}>
                 {dictionary.nav.atelier}
               </Link>
             </li>
@@ -183,6 +206,18 @@ export function MccHeader({ dictionary, locale }: MccHeaderProps) {
               <Link href={`/${locale}#concierge`} className="mobile-nav__link" onClick={closeMenu}>
                 {dictionary.nav.concierge}
               </Link>
+            </li>
+            <li className="mobile-nav__item mobile-nav__item--whatsapp">
+              <span className="mono-label mobile-nav__idx">08</span>
+              <a
+                href="https://wa.me/212689532341"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mobile-nav__link mobile-nav__link--whatsapp"
+                onClick={closeMenu}
+              >
+                {locale === "ar" ? "الطلب عبر واتساب" : "COMMANDE WHATSAPP"}
+              </a>
             </li>
           </ul>
         </nav>
