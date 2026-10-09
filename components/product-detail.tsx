@@ -453,6 +453,7 @@ export function ProductDetail({ dictionary, locale, product }: ProductDetailProp
           locale={locale}
           onClose={() => setIsOrderModalOpen(false)}
           product={product}
+          selectedImage={selectedImage}
           selectedSize={selectedSize}
           selectedVariant={selectedVariant}
         />

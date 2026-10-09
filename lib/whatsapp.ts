@@ -8,12 +8,109 @@ import { getLocalizedField } from "@/data/products";
  */
 export const WHATSAPP_NUMBER = "212689532341";
 
+/**
+ * Verified public deployment domain assigned by Vercel.
+ * Active and publicly serving assets while custom domain DNS is pending.
+ */
+export const VERIFIED_VERCEL_DOMAIN = "https://mcc-handmade.vercel.app";
+
+/**
+ * Target custom domain for MCC Handmade.
+ * Configurable via NEXT_PUBLIC_SITE_URL when DNS delegation is activated.
+ */
+export const CUSTOM_DOMAIN = "https://mcchandmade.com";
+
+/**
+ * Canonical default public domain.
+ * Defaults to the verified active public Vercel deployment while custom domain DNS is inactive.
+ */
+export const DEFAULT_SITE_URL = VERIFIED_VERCEL_DOMAIN;
+
+/**
+ * Validates that a URL points to a local loopback or local port environment.
+ */
+function isLocalhost(url: string): boolean {
+  return /localhost|127\.0\.0\.1|0\.0\.0\.0|::1/i.test(url) || /^https?:\/\/[^/]+:\d+/i.test(url);
+}
+
+/**
+ * Normalizes a base URL ensuring it has an https:// protocol and no trailing slash.
+ */
+function normalizeBaseUrl(url: string): string {
+  let cleaned = url.trim().replace(/\/+$/, "");
+  if (!/^https?:\/\//i.test(cleaned)) {
+    cleaned = `https://${cleaned}`;
+  }
+  return cleaned;
+}
+
+/**
+ * Resolves the canonical public base URL for public assets.
+ * 1. Reads NEXT_PUBLIC_SITE_URL (if configured and not localhost)
+ * 2. Reads NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL (if on Vercel without custom domain)
+ * 3. Reads NEXT_PUBLIC_VERCEL_URL (if on Vercel preview)
+ * 4. Falls back to DEFAULT_SITE_URL (verified live Vercel domain https://mcc-handmade.vercel.app)
+ */
+export function getPublicBaseUrl(): string {
+  const envSiteUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+  if (envSiteUrl && !isLocalhost(envSiteUrl)) {
+    return normalizeBaseUrl(envSiteUrl);
+  }
+
+  const vercelProdUrl = process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL?.trim();
+  if (vercelProdUrl && !isLocalhost(vercelProdUrl)) {
+    return normalizeBaseUrl(vercelProdUrl);
+  }
+
+  const vercelUrl = process.env.NEXT_PUBLIC_VERCEL_URL?.trim();
+  if (vercelUrl && !isLocalhost(vercelUrl)) {
+    return normalizeBaseUrl(vercelUrl);
+  }
+
+  return DEFAULT_SITE_URL;
+}
+
+/**
+ * Generates an absolute, public URL for a product image.
+ * e.g., "/products/model-01/burgundy-01.png" -> "https://mcc-handmade.vercel.app/products/model-01/burgundy-01.png"
+ * Strictly prevents any localhost URL from being output.
+ */
+export function getPublicProductImageUrl(imagePath?: string): string {
+  if (!imagePath) return "";
+
+  // If already an absolute URL, check if it's localhost or valid
+  if (imagePath.startsWith("http://") || imagePath.startsWith("https://")) {
+    if (isLocalhost(imagePath)) {
+      try {
+        const parsed = new URL(imagePath);
+        const baseUrl = getPublicBaseUrl();
+        return `${baseUrl}${parsed.pathname}`;
+      } catch {
+        return "";
+      }
+    }
+    return imagePath;
+  }
+
+  const baseUrl = getPublicBaseUrl();
+  const normalizedPath = imagePath.startsWith("/") ? imagePath : `/${imagePath}`;
+  const fullUrl = `${baseUrl}${normalizedPath}`;
+
+  // Fail-safe: ensure no localhost URL can ever be produced
+  if (isLocalhost(fullUrl)) {
+    return `${VERIFIED_VERCEL_DOMAIN}${normalizedPath}`;
+  }
+
+  return fullUrl;
+}
+
 export interface WhatsAppOrderPayload {
   product: Product;
   selectedColorName: string;
   selectedSizeFormatted: string;
   customerName: string;
   city: string;
+  imagePath?: string;
   locale: Locale;
 }
 
@@ -46,15 +143,24 @@ export function formatOrderSize(
 
 /**
  * Constructs the exact textual message for WhatsApp orders.
- * Follows Section 17 (FR) and Section 18 (AR) with exact line breaks and formatting.
+ * Includes all customer fields and the clickable public product image URL.
  */
 export function buildWhatsAppMessage(payload: WhatsAppOrderPayload): string {
-  const { product, selectedColorName, selectedSizeFormatted, customerName, city, locale } = payload;
+  const {
+    product,
+    selectedColorName,
+    selectedSizeFormatted,
+    customerName,
+    city,
+    imagePath,
+    locale,
+  } = payload;
   const productName = getLocalizedField(product.name, locale);
   const priceAmount = product.price.amount;
+  const absoluteImageUrl = getPublicProductImageUrl(imagePath);
 
   if (locale === "ar") {
-    return [
+    const lines = [
       "مرحباً MCC Handmade 👋",
       "",
       "أرغب في تأكيد طلب:",
@@ -66,12 +172,17 @@ export function buildWhatsAppMessage(payload: WhatsAppOrderPayload): string {
       "",
       `الاسم الكامل: ${customerName}`,
       `المدينة: ${city}`,
-      "",
-      "شكراً لتأكيد طلبي.",
-    ].join("\n");
+    ];
+
+    if (absoluteImageUrl) {
+      lines.push("", "صورة المنتج:", absoluteImageUrl);
+    }
+
+    lines.push("", "شكراً لتأكيد طلبي.");
+    return lines.join("\n");
   }
 
-  return [
+  const lines = [
     "Bonjour MCC Handmade 👋",
     "",
     "Je souhaite passer une commande :",
@@ -83,9 +194,14 @@ export function buildWhatsAppMessage(payload: WhatsAppOrderPayload): string {
     "",
     `Nom complet : ${customerName}`,
     `Ville : ${city}`,
-    "",
-    "Merci de confirmer ma commande.",
-  ].join("\n");
+  ];
+
+  if (absoluteImageUrl) {
+    lines.push("", "Photo du produit :", absoluteImageUrl);
+  }
+
+  lines.push("", "Merci de confirmer ma commande.");
+  return lines.join("\n");
 }
 
 /**

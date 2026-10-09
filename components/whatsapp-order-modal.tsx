@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
-import type { Product, ColourVariant, SizeOption } from "@/data/products";
+import type { Product, ColourVariant, SizeOption, ProductImage } from "@/data/products";
 import { getLocalizedField } from "@/data/products";
 import type { Dictionary } from "@/lib/dictionaries";
 import type { Locale } from "@/lib/i18n";
@@ -18,6 +18,7 @@ interface WhatsAppOrderModalProps {
   product: Product;
   selectedVariant: ColourVariant;
   selectedSize: SizeOption;
+  selectedImage?: ProductImage;
   locale: Locale;
   dictionary: Dictionary;
 }
@@ -28,6 +29,7 @@ export function WhatsAppOrderModal({
   product,
   selectedVariant,
   selectedSize,
+  selectedImage,
   locale,
   dictionary,
 }: WhatsAppOrderModalProps) {
@@ -46,12 +48,17 @@ export function WhatsAppOrderModal({
   const productName = getLocalizedField(product.name, locale);
   const selectedColorName = getLocalizedField(selectedVariant.name, locale);
   const formattedSize = formatOrderSize(product, selectedSize, locale);
-  const primaryImage = selectedVariant.images[0] ?? {
-    id: "default-img",
-    src: "/products/model-01/burgundy-01.png",
-    width: 928,
-    height: 1695,
-  };
+
+  const variantImages = selectedVariant.images;
+  const activeImage =
+    (selectedImage && variantImages.some((img) => img.id === selectedImage.id)
+      ? selectedImage
+      : variantImages[0]) ?? {
+      id: "default-img",
+      src: "/products/model-01/burgundy-01.png",
+      width: 928,
+      height: 1695,
+    };
 
   // Reset errors and step when modal opens/closes
   useEffect(() => {
@@ -118,6 +125,7 @@ export function WhatsAppOrderModal({
     selectedSizeFormatted: formattedSize,
     customerName: customerName.trim(),
     city: city.trim(),
+    imagePath: activeImage.src,
     locale,
   };
 
@@ -172,11 +180,11 @@ export function WhatsAppOrderModal({
                   <Image
                     alt={`${productName} — ${selectedColorName}`}
                     className="order-garment-summary__image"
-                    height={primaryImage.height ?? 1600}
+                    height={activeImage.height ?? 1600}
                     priority
                     sizes="96px"
-                    src={primaryImage.src}
-                    width={primaryImage.width ?? 1000}
+                    src={activeImage.src}
+                    width={activeImage.width ?? 1000}
                   />
                 </div>
                 <div className="order-garment-summary__details">
@@ -267,11 +275,11 @@ export function WhatsAppOrderModal({
                   <Image
                     alt={`${productName} — ${selectedColorName}`}
                     className="order-confirmation-image"
-                    height={primaryImage.height ?? 1600}
+                    height={activeImage.height ?? 1600}
                     priority
                     sizes="(max-width: 640px) 100vw, 420px"
-                    src={primaryImage.src}
-                    width={primaryImage.width ?? 1000}
+                    src={activeImage.src}
+                    width={activeImage.width ?? 1000}
                   />
                   <div className="order-confirmation-image-badge mono-label">
                     {selectedColorName}
