@@ -124,75 +124,198 @@ export function DominoGallery({
   secondaryCtaText = locale === "ar" ? "تصفحي الموديلات" : "Explorer les modèles",
 }: DominoGalleryProps) {
   const isArabic = locale === "ar";
-  const [activeIndex, setActiveIndex] = useState(1);
-  const [isPaused, setIsPaused] = useState(false);
-  const [isInViewport, setIsInViewport] = useState(true);
-  const [progress, setProgress] = useState(0);
 
-  const containerRef = useRef<HTMLDivElement>(null);
+  // 1. Manual selection state (stable, default index 1, never rotates automatically)
+  const [selectedIndex, setSelectedIndex] = useState(1);
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const [isHovering, setIsHovering] = useState(false);
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Active visual focus is the card nearest the pointer on hover, or the selected card at rest
+  const activeVisualIndex = isHovering && hoveredIndex !== null ? hoveredIndex : selectedIndex;
+
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const stageRef = useRef<HTMLDivElement>(null);
   const animFrameRef = useRef<number | null>(null);
-  const lastTimeRef = useRef<number>(0);
+  const hoveredIndexRef = useRef<number | null>(null);
+  const isHoveringRef = useRef(false);
+  const targetParallaxXRef = useRef(0);
+  const currentParallaxXRef = useRef(0);
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
 
-  // Viewport observer: completely pauses rAF loop when off-screen to save CPU
+  // Media query checks for reduced motion and mobile screen size
   useEffect(() => {
-    const el = containerRef.current;
-    if (!el || typeof IntersectionObserver === "undefined") return;
+    if (typeof window === "undefined") return;
 
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        setIsInViewport(entry.isIntersecting);
-      },
-      { threshold: 0.1 }
-    );
+    const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    setPrefersReducedMotion(motionQuery.matches);
+    const onMotionChange = (e: MediaQueryListEvent) => setPrefersReducedMotion(e.matches);
+    motionQuery.addEventListener("change", onMotionChange);
 
-    observer.observe(el);
-    return () => observer.disconnect();
+    const mobileQuery = window.matchMedia("(max-width: 640px)");
+    setIsMobile(mobileQuery.matches);
+    const onMobileChange = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mobileQuery.addEventListener("change", onMobileChange);
+
+    return () => {
+      motionQuery.removeEventListener("change", onMotionChange);
+      mobileQuery.removeEventListener("change", onMobileChange);
+    };
   }, []);
 
-  // Auto idle domino progression that gently cycles through cards
-  useEffect(() => {
-    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (prefersReducedMotion || !isInViewport) return;
-
-    function step(timestamp: number) {
-      if (!lastTimeRef.current) lastTimeRef.current = timestamp;
-      const delta = timestamp - lastTimeRef.current;
-
-      if (!isPaused && delta > 4200) {
-        setActiveIndex((prev) => (prev + 1) % DOMINO_ITEMS.length);
-        lastTimeRef.current = timestamp;
+  // Parallax animation loop: only runs while interacting or settling to rest, never at idle
+  const updateParallax = useCallback(() => {
+    if (prefersReducedMotion) {
+      if (stageRef.current) {
+        stageRef.current.style.transform = "";
       }
-
-      animFrameRef.current = requestAnimationFrame(step);
+      animFrameRef.current = null;
+      return;
     }
 
-    animFrameRef.current = requestAnimationFrame(step);
-    return () => {
-      if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
-    };
-  }, [isPaused, isInViewport]);
+    const diff = targetParallaxXRef.current - currentParallaxXRef.current;
+    currentParallaxXRef.current += diff * 0.08;
 
-  // Subtle scroll-driven micro-rotation handover
-  const handleScrollProgress = useCallback(() => {
-    if (!containerRef.current || !isInViewport) return;
-    const rect = containerRef.current.getBoundingClientRect();
-    const windowH = window.innerHeight || 800;
-    const currentProgress = Math.min(Math.max((windowH - rect.top) / (windowH + rect.height), 0), 1);
-    setProgress(currentProgress);
-  }, [isInViewport]);
+    if (stageRef.current) {
+      const pX = currentParallaxXRef.current;
+      const deg = (pX * 3.2 * (isArabic ? -1 : 1)).toFixed(3);
+      const shift = (pX * 14 * (isArabic ? -1 : 1)).toFixed(2);
+      stageRef.current.style.transform = `rotateY(${deg}deg) translateX(${shift}px)`;
+    }
 
+    // Keep loop active while user is hovering OR currentParallax has not yet settled
+    if (isHoveringRef.current || Math.abs(currentParallaxXRef.current) > 0.001) {
+      animFrameRef.current = requestAnimationFrame(updateParallax);
+    } else {
+      currentParallaxXRef.current = 0;
+      if (stageRef.current) {
+        stageRef.current.style.transform = "rotateY(0deg) translateX(0px)";
+      }
+      animFrameRef.current = null;
+    }
+  }, [isArabic, prefersReducedMotion]);
+
+  const startParallaxLoop = useCallback(() => {
+    if (prefersReducedMotion) return;
+    if (!animFrameRef.current) {
+      animFrameRef.current = requestAnimationFrame(updateParallax);
+    }
+  }, [prefersReducedMotion, updateParallax]);
+
+  // Clean up animation on unmount
   useEffect(() => {
-    window.addEventListener("scroll", handleScrollProgress, { passive: true });
-    handleScrollProgress();
-    return () => window.removeEventListener("scroll", handleScrollProgress);
-  }, [handleScrollProgress]);
+    return () => {
+      if (animFrameRef.current) {
+        cancelAnimationFrame(animFrameRef.current);
+      }
+    };
+  }, []);
+
+  // Pointer movement: maps horizontal mouse position across gallery to nearest card + subtle 3D shift
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement> | React.MouseEvent<HTMLDivElement>) => {
+    if ("pointerType" in e && e.pointerType === "touch") return;
+    if (prefersReducedMotion) return;
+    const wrapper = wrapperRef.current;
+    if (!wrapper) return;
+
+    if (!isHoveringRef.current) {
+      isHoveringRef.current = true;
+      setIsHovering(true);
+    }
+
+    const rect = wrapper.getBoundingClientRect();
+    if (rect.width <= 0) return;
+
+    // 1. Subtle 3D stage parallax
+    const normX = Math.min(Math.max((e.clientX - rect.left) / rect.width, 0), 1);
+    targetParallaxXRef.current = (normX - 0.5) * 2;
+    startParallaxLoop();
+
+    // 2. Continuous horizontal card detection across gallery width
+    const normFraction = isArabic ? 1 - normX : normX;
+    const continuousIdx = normFraction * (DOMINO_ITEMS.length - 1);
+    const nearest = Math.min(
+      Math.max(Math.round(continuousIdx), 0),
+      DOMINO_ITEMS.length - 1
+    );
+
+    // Apply hysteresis to prevent boundary jitter
+    const current = hoveredIndexRef.current;
+    if (current === null) {
+      hoveredIndexRef.current = nearest;
+      setHoveredIndex(nearest);
+    } else if (Math.abs(continuousIdx - current) > 0.45) {
+      hoveredIndexRef.current = nearest;
+      setHoveredIndex(nearest);
+    }
+  };
+
+  const handlePointerEnter = () => {
+    isHoveringRef.current = true;
+    setIsHovering(true);
+  };
+
+  const handlePointerLeave = () => {
+    isHoveringRef.current = false;
+    setIsHovering(false);
+    hoveredIndexRef.current = null;
+    setHoveredIndex(null);
+    targetParallaxXRef.current = 0;
+    startParallaxLoop();
+  };
+
+  // Direct card hover for precision
+  const handleCardPointerEnter = (idx: number) => {
+    isHoveringRef.current = true;
+    setIsHovering(true);
+    hoveredIndexRef.current = idx;
+    setHoveredIndex(idx);
+  };
+
+  // Manual selection: clicking a card locks it as the selected product
+  const handleSelectCard = (idx: number) => {
+    setSelectedIndex(idx);
+    hoveredIndexRef.current = idx;
+    setHoveredIndex(idx);
+  };
+
+  // Touch swipe support on mobile
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length !== 1) return;
+    touchStartRef.current = {
+      x: e.touches[0].clientX,
+      y: e.touches[0].clientY,
+    };
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (!touchStartRef.current || e.changedTouches.length !== 1) return;
+    const start = touchStartRef.current;
+    const endX = e.changedTouches[0].clientX;
+    const endY = e.changedTouches[0].clientY;
+    const deltaX = endX - start.x;
+    const deltaY = endY - start.y;
+    touchStartRef.current = null;
+
+    // Preserve native vertical scrolling
+    if (Math.abs(deltaY) > Math.abs(deltaX)) return;
+
+    if (Math.abs(deltaX) >= 35) {
+      const isSwipingNext = isArabic ? deltaX > 0 : deltaX < 0;
+      if (isSwipingNext) {
+        setSelectedIndex((prev) => Math.min(prev + 1, DOMINO_ITEMS.length - 1));
+      } else {
+        setSelectedIndex((prev) => Math.max(prev - 1, 0));
+      }
+    }
+  };
 
   return (
     <section
       className="domino-hero"
       aria-label={isArabic ? "معرض أزياء الدار" : "Galerie Domino Mode Féminine"}
       dir={isArabic ? "rtl" : "ltr"}
-      ref={containerRef}
     >
       {/* Editorial Ambient Background Elements */}
       <div className="domino-hero__ambient" aria-hidden="true">
@@ -233,44 +356,99 @@ export function DominoGallery({
           </div>
         </div>
 
-        {/* The 3D Domino Stage */}
+        {/* The Interactive 3D Domino Stage */}
         <div
+          ref={wrapperRef}
           className="domino-stage-wrapper"
-          onMouseEnter={() => setIsPaused(true)}
-          onMouseLeave={() => setIsPaused(false)}
+          onPointerEnter={handlePointerEnter}
+          onPointerMove={handlePointerMove}
+          onPointerLeave={handlePointerLeave}
+          onMouseEnter={handlePointerEnter}
+          onMouseMove={handlePointerMove}
+          onMouseLeave={handlePointerLeave}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
         >
-          <div className="domino-stage" role="region" aria-label="Lookbook Domino">
+          <div
+            ref={stageRef}
+            className="domino-stage"
+            role="region"
+            aria-label="Lookbook Domino"
+            onClick={() => {
+              if (hoveredIndex !== null) {
+                handleSelectCard(hoveredIndex);
+              }
+            }}
+          >
             {DOMINO_ITEMS.map((item, index) => {
-              const offset = index - activeIndex;
-              const isActive = index === activeIndex;
+              const offset = index - activeVisualIndex;
+              const isFocused = index === activeVisualIndex;
+              const isSelected = index === selectedIndex;
 
-              // Domino 3D cascade calculation
-              // Cards topple and lie back with a natural gravity tilt
               const dirMultiplier = isArabic ? -1 : 1;
-              const rotateY = isActive ? 0 : offset * -14 * dirMultiplier;
-              const rotateZ = isActive ? 0 : offset * -2 * dirMultiplier;
-              const translateX = offset * 135 * dirMultiplier;
-              const translateZ = isActive ? 60 : -Math.abs(offset) * 85;
-              const opacity = Math.abs(offset) > 3 ? 0.15 : 1 - Math.abs(offset) * 0.18;
-              const scale = isActive ? 1.04 : 0.94 - Math.abs(offset) * 0.04;
+              const stepX = isMobile ? 85 : 170;
+
+              // 3D Domino calculation: subtle, refined perspective
+              const rotateY = prefersReducedMotion || isFocused ? 0 : offset * -12.5 * dirMultiplier;
+              const rotateZ = prefersReducedMotion || isFocused ? 0 : offset * -1.6 * dirMultiplier;
+              const translateX = offset * stepX * dirMultiplier;
+              const translateZ = prefersReducedMotion
+                ? 0
+                : isFocused
+                ? 68
+                : -Math.abs(offset) * 76;
+              const opacity = Math.abs(offset) > 3 ? 0.18 : 1 - Math.abs(offset) * 0.16;
+              const scale = isFocused ? 1.05 : Math.max(0.93 - Math.abs(offset) * 0.04, 0.82);
 
               return (
                 <div
                   key={item.id}
-                  className={`domino-card ${isActive ? "domino-card--active" : ""}`}
+                  className={`domino-card ${isFocused ? "domino-card--active" : ""}`}
                   style={{
                     transform: `translateX(${translateX}px) translateZ(${translateZ}px) rotateY(${rotateY}deg) rotateZ(${rotateZ}deg) scale(${scale})`,
-                    zIndex: 20 - Math.abs(offset),
-                    opacity: Math.max(opacity, 0.1),
+                    zIndex: 30 - Math.abs(offset),
+                    opacity: Math.max(opacity, 0.15),
                   }}
-                  onClick={() => setActiveIndex(index)}
+                  onClick={() => handleSelectCard(index)}
+                  onPointerEnter={(e) => {
+                    e.stopPropagation();
+                    handleCardPointerEnter(index);
+                  }}
+                  onPointerMove={(e) => {
+                    e.stopPropagation();
+                    if (wrapperRef.current) {
+                      const rect = wrapperRef.current.getBoundingClientRect();
+                      if (rect.width > 0) {
+                        const normX = Math.min(Math.max((e.clientX - rect.left) / rect.width, 0), 1);
+                        targetParallaxXRef.current = (normX - 0.5) * 2;
+                        startParallaxLoop();
+                      }
+                    }
+                    handleCardPointerEnter(index);
+                  }}
                   onFocus={() => {
-                    setActiveIndex(index);
-                    setIsPaused(true);
+                    handleCardPointerEnter(index);
                   }}
-                  onBlur={() => setIsPaused(false)}
+                  onBlur={() => {
+                    setHoveredIndex(null);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      handleSelectCard(index);
+                    } else if (e.key === "ArrowRight") {
+                      e.preventDefault();
+                      const next = isArabic ? Math.max(index - 1, 0) : Math.min(index + 1, DOMINO_ITEMS.length - 1);
+                      handleSelectCard(next);
+                    } else if (e.key === "ArrowLeft") {
+                      e.preventDefault();
+                      const prev = isArabic ? Math.min(index + 1, DOMINO_ITEMS.length - 1) : Math.max(index - 1, 0);
+                      handleSelectCard(prev);
+                    }
+                  }}
                   tabIndex={0}
                   role="button"
+                  aria-pressed={isSelected}
                   aria-label={`${item.title[locale]} — ${item.color[locale]}`}
                 >
                   <div className="domino-card__frame">
@@ -280,7 +458,7 @@ export function DominoGallery({
                         className="domino-card__image"
                         fill
                         priority={index === 0 || index === 1}
-                        sizes="(max-width: 640px) 240px, (max-width: 1024px) 300px, 340px"
+                        sizes="(max-width: 640px) 220px, (max-width: 1024px) 300px, 340px"
                         src={item.image}
                       />
                       <div className="domino-card__tint" />
@@ -302,11 +480,14 @@ export function DominoGallery({
                         </span>
                       </div>
 
-                      {isActive && (
+                      {isFocused && (
                         <Link
                           href={`/${locale}/${item.productId}`}
                           className="domino-card__action-btn mono-label"
-                          tabIndex={-1}
+                          tabIndex={0}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                          }}
                         >
                           <span>{isArabic ? "عرض التفاصيل" : "VOIR LA PIÈCE"}</span>
                           <span aria-hidden="true">{isArabic ? "←" : "→"}</span>
@@ -324,11 +505,11 @@ export function DominoGallery({
             {DOMINO_ITEMS.map((item, idx) => (
               <button
                 key={item.id}
-                className={`domino-dot ${idx === activeIndex ? "domino-dot--active" : ""}`}
-                onClick={() => setActiveIndex(idx)}
+                className={`domino-dot ${idx === activeVisualIndex ? "domino-dot--active" : ""}`}
+                onClick={() => handleSelectCard(idx)}
                 type="button"
                 role="tab"
-                aria-selected={idx === activeIndex}
+                aria-selected={idx === activeVisualIndex}
                 aria-label={`${item.title[locale]} — ${item.color[locale]}`}
               >
                 <span className="sr-only">0{idx + 1}</span>
