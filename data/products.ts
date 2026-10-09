@@ -75,7 +75,7 @@ const model01Availability = (): Readonly<Record<string, AvailabilityStatus>> => 
 
 export const model01: Product = {
   id: "model-01",
-  name: { fr: "Modèle 01", ar: "الموديل 01" },
+  name: { fr: "Ensemble Sport", ar: "طقم سبور" },
   price: {
     amount: 249,
     currency: { fr: "DH", ar: "درهم" },
@@ -290,7 +290,7 @@ export const model03: Product = {
   colourVariants: [
     {
       id: "blanc-casse",
-      name: { fr: "Blanc cassé / Off-white", ar: "أوف وايت / أبيض مكسور" },
+      name: { fr: "Blanc cassé", ar: "أوف وايت" },
       images: [
         { id: "model-03-blanc-casse-01", src: "/products/model-03/blanc-casse-01.png", width: 1039, height: 1513 },
       ],
@@ -306,7 +306,7 @@ export const model03: Product = {
     },
     {
       id: "marron",
-      name: { fr: "Marron / Brun", ar: "بني" },
+      name: { fr: "Marron", ar: "بني" },
       images: [
         { id: "model-03-marron-01", src: "/products/model-03/marron-01.png", width: 929, height: 1693 },
       ],

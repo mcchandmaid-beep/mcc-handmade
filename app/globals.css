@@ -2749,3 +2749,425 @@ html[lang="ar"] .collection-card__tagline {
     scroll-behavior: auto !important;
   }
 }
+
+/* ==========================================================================
+   13. WHATSAPP ORDERING SYSTEM & PRODUCT CONFIRMATION
+   ========================================================================== */
+
+.product-selection-error {
+  margin-block-start: 12px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #b91c1c;
+}
+
+html[lang="ar"] .product-selection-error {
+  font-family: var(--font-arabic);
+  font-size: 12px;
+  letter-spacing: 0;
+}
+
+.order-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: rgba(0, 0, 0, 0.72);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 16px;
+  overflow-y: auto;
+}
+
+.order-modal-panel {
+  position: relative;
+  width: 100%;
+  max-width: 520px;
+  background: var(--mcc-white);
+  border: 1px solid var(--mcc-black);
+  margin: auto;
+  max-height: calc(100vh - 40px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.order-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 24px;
+  border-block-end: 1px solid var(--mcc-hairline);
+  background: var(--mcc-sand-light);
+  gap: 16px;
+}
+
+.order-modal-eyebrow {
+  display: block;
+  font-size: 10px;
+  color: var(--mcc-gray);
+  letter-spacing: 0.08em;
+  margin-block-end: 6px;
+}
+
+html[lang="ar"] .order-modal-eyebrow {
+  font-family: var(--font-arabic);
+  font-size: 11px;
+  letter-spacing: 0;
+}
+
+.order-modal-title {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--mcc-black);
+}
+
+html[lang="ar"] .order-modal-title {
+  font-family: var(--font-arabic);
+  font-size: 16px;
+  letter-spacing: 0;
+}
+
+.order-modal-close-btn {
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid var(--mcc-hairline);
+  color: var(--mcc-black);
+  font-size: 13px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 180ms ease;
+}
+
+.order-modal-close-btn:hover {
+  background: var(--mcc-black);
+  color: var(--mcc-white);
+  border-color: var(--mcc-black);
+}
+
+.order-modal-body {
+  padding: 24px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* Step 1: Customer Information */
+.order-garment-summary {
+  display: flex;
+  gap: 16px;
+  padding: 16px;
+  background: var(--mcc-sand-light);
+  border: 1px solid var(--mcc-hairline);
+  margin-block-end: 24px;
+  align-items: center;
+}
+
+.order-garment-summary__image-wrapper {
+  width: 68px;
+  height: 90px;
+  position: relative;
+  flex-shrink: 0;
+  border: 1px solid var(--mcc-hairline);
+  background: var(--mcc-white);
+  overflow: hidden;
+}
+
+.order-garment-summary__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.order-garment-summary__details {
+  flex: 1;
+  min-width: 0;
+}
+
+.order-garment-summary__title {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0 0 4px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--mcc-black);
+}
+
+html[lang="ar"] .order-garment-summary__title {
+  font-family: var(--font-arabic);
+  font-size: 15px;
+}
+
+.order-garment-summary__tags {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  font-size: 12px;
+  color: var(--mcc-gray);
+  margin-block-end: 6px;
+  font-family: var(--font-mono);
+}
+
+html[lang="ar"] .order-garment-summary__tags {
+  font-family: var(--font-arabic);
+  font-size: 12px;
+}
+
+.order-summary-separator {
+  color: var(--mcc-hairline);
+}
+
+.order-garment-summary__price {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--mcc-black);
+  font-family: var(--font-mono);
+}
+
+html[lang="ar"] .order-garment-summary__price {
+  font-family: var(--font-arabic);
+}
+
+.order-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.order-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.order-form-label {
+  font-size: 11px;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--mcc-gray);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+html[lang="ar"] .order-form-label {
+  font-family: var(--font-arabic);
+  font-size: 12px;
+  letter-spacing: 0;
+}
+
+.order-required-mark {
+  color: #b91c1c;
+}
+
+.order-form-input {
+  width: 100%;
+  padding: 13px 16px;
+  font-size: 14px;
+  background: var(--mcc-white);
+  border: 1px solid var(--mcc-hairline);
+  color: var(--mcc-black);
+  transition: border-color 180ms ease;
+  font-family: var(--font-sans);
+}
+
+html[lang="ar"] .order-form-input {
+  font-family: var(--font-arabic);
+  font-size: 13px;
+}
+
+.order-form-input:focus {
+  outline: none;
+  border-color: var(--mcc-black);
+}
+
+.order-form-input--error {
+  border-color: #b91c1c !important;
+}
+
+.order-form-error {
+  margin: 2px 0 0;
+  font-size: 11px;
+  color: #b91c1c;
+  font-family: var(--font-mono);
+  letter-spacing: 0.02em;
+}
+
+html[lang="ar"] .order-form-error {
+  font-family: var(--font-arabic);
+  font-size: 12px;
+}
+
+.order-form-actions {
+  margin-block-start: 8px;
+}
+
+.order-submit-btn {
+  width: 100%;
+  justify-content: space-between;
+}
+
+/* Step 2: Order Review & Image Confirmation */
+.order-confirmation-visual {
+  margin-block-end: 20px;
+}
+
+.order-confirmation-image-box {
+  position: relative;
+  width: 100%;
+  height: 260px;
+  overflow: hidden;
+  border: 1px solid var(--mcc-hairline);
+  background: var(--mcc-sand-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.order-confirmation-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.order-confirmation-image-badge {
+  position: absolute;
+  inset-block-end: 10px;
+  inset-inline-end: 10px;
+  background: var(--mcc-black);
+  color: var(--mcc-white);
+  padding: 4px 10px;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+html[lang="ar"] .order-confirmation-image-badge {
+  font-family: var(--font-arabic);
+  letter-spacing: 0;
+}
+
+.order-summary-box {
+  border: 1px solid var(--mcc-hairline);
+  background: var(--mcc-sand-light);
+  padding: 16px 20px;
+  margin-block-end: 20px;
+}
+
+.order-summary-grid {
+  display: flex;
+  flex-direction: column;
+}
+
+.order-summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 10px 0;
+  border-block-end: 1px solid var(--mcc-hairline);
+  gap: 16px;
+}
+
+.order-summary-row:last-child {
+  border-block-end: none;
+}
+
+.order-summary-label {
+  font-size: 11px;
+  color: var(--mcc-gray);
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  flex-shrink: 0;
+}
+
+html[lang="ar"] .order-summary-label {
+  font-family: var(--font-arabic);
+  font-size: 12px;
+  letter-spacing: 0;
+}
+
+.order-summary-value {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--mcc-black);
+  text-align: right;
+  word-break: break-word;
+}
+
+html[lang="ar"] .order-summary-value {
+  font-family: var(--font-arabic);
+  text-align: left;
+}
+
+.order-review-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.order-confirm-btn {
+  width: 100%;
+  justify-content: space-between;
+  text-decoration: none;
+}
+
+.order-back-btn {
+  background: transparent;
+  border: none;
+  padding: 10px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--mcc-gray);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  transition: color 180ms ease;
+}
+
+html[lang="ar"] .order-back-btn {
+  font-family: var(--font-arabic);
+  font-size: 12px;
+  letter-spacing: 0;
+}
+
+.order-back-btn:hover {
+  color: var(--mcc-black);
+}
+
+.order-notice {
+  font-size: 10px;
+  color: var(--mcc-gray);
+  text-align: center;
+  margin: 16px 0 0;
+  line-height: 1.4;
+  letter-spacing: 0.04em;
+}
+
+html[lang="ar"] .order-notice {
+  font-family: var(--font-arabic);
+  font-size: 11px;
+  letter-spacing: 0;
+}
+
+.order-general-error {
+  margin-block-end: 16px;
+  text-align: center;
+}

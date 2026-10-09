@@ -7,6 +7,7 @@ import type { Product, SizeOption } from "@/data/products";
 import { getLocalizedField, formatPrice } from "@/data/products";
 import { formatMessage, type Dictionary } from "@/lib/dictionaries";
 import type { Locale } from "@/lib/i18n";
+import { WhatsAppOrderModal } from "@/components/whatsapp-order-modal";
 
 interface ProductDetailProps {
   dictionary: Dictionary;
@@ -18,16 +19,17 @@ export function ProductDetail({ dictionary, locale, product }: ProductDetailProp
   const isArabic = locale === "ar";
   const firstVariant = product.colourVariants[0]!;
   
-  const [selectedColourId, setSelectedColourId] = useState(firstVariant.id);
+  const [selectedColourId, setSelectedColourId] = useState<string | null>(null);
   const [selectedImageId, setSelectedImageId] = useState(firstVariant.images[0]!.id);
   const [selectedSize, setSelectedSize] = useState<SizeOption | null>(null);
-  const [isAddedToBag, setIsAddedToBag] = useState(false);
+  const [selectionError, setSelectionError] = useState("");
+  const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
   const [isImageTransitioning, setIsImageTransitioning] = useState(false);
 
   const mainFigureRef = useRef<HTMLElement>(null);
 
   const selectedVariant = useMemo(
-    () => product.colourVariants.find((v) => v.id === selectedColourId) ?? firstVariant,
+    () => (selectedColourId ? product.colourVariants.find((v) => v.id === selectedColourId) : undefined) ?? firstVariant,
     [firstVariant, product.colourVariants, selectedColourId]
   );
 
@@ -38,7 +40,7 @@ export function ProductDetail({ dictionary, locale, product }: ProductDetailProp
 
   const selectedImageIndex = selectedVariant.images.findIndex((img) => img.id === selectedImage.id) + 1;
   const totalVariantImages = selectedVariant.images.length;
-  const selectedColourName = getLocalizedField(selectedVariant.name, locale);
+  const selectedColourName = selectedColourId ? getLocalizedField(selectedVariant.name, locale) : "";
 
   // Subtle pointer-responsive micro-movement on desktop (4–8px range, no distortion)
   useEffect(() => {
@@ -121,6 +123,14 @@ export function ProductDetail({ dictionary, locale, product }: ProductDetailProp
       setIsImageTransitioning(false);
     }, 150);
 
+    if (selectionError) {
+      if (!selectedSize) {
+        setSelectionError(dictionary.whatsapp.validation.sizeMissing);
+      } else {
+        setSelectionError("");
+      }
+    }
+
     // If active size is unavailable in new variant, safely clear
     if (selectedSize && nextVariant.availabilityBySize[selectedSize.id] === "unavailable") {
       setSelectedSize(null);
@@ -138,13 +148,34 @@ export function ProductDetail({ dictionary, locale, product }: ProductDetailProp
 
   function handleSizeSelect(sizeOption: SizeOption) {
     setSelectedSize(sizeOption);
+    if (selectionError) {
+      if (!selectedColourId) {
+        setSelectionError(dictionary.whatsapp.validation.colorMissing);
+      } else {
+        setSelectionError("");
+      }
+    }
   }
 
-  function handleAddToBag() {
-    setIsAddedToBag(true);
-    setTimeout(() => {
-      setIsAddedToBag(false);
-    }, 2400);
+  function handleOrderClick() {
+    const isColorMissing = !selectedColourId;
+    const isSizeMissing = !selectedSize;
+
+    if (isColorMissing && isSizeMissing) {
+      setSelectionError(dictionary.whatsapp.validation.bothMissing);
+      return;
+    }
+    if (isColorMissing) {
+      setSelectionError(dictionary.whatsapp.validation.colorMissing);
+      return;
+    }
+    if (isSizeMissing) {
+      setSelectionError(dictionary.whatsapp.validation.sizeMissing);
+      return;
+    }
+
+    setSelectionError("");
+    setIsOrderModalOpen(true);
   }
 
   const availabilityStatus = selectedSize
@@ -251,7 +282,9 @@ export function ProductDetail({ dictionary, locale, product }: ProductDetailProp
             <fieldset className="variant-group">
               <legend>
                 <span>{dictionary.colour}</span>
-                <span className="variant-selection-inline">— {selectedColourName}</span>
+                {selectedColourName && (
+                  <span className="variant-selection-inline">— {selectedColourName}</span>
+                )}
               </legend>
               <div className="variant-options variant-options--colours">
                 {product.colourVariants.map((variant) => {
@@ -315,25 +348,24 @@ export function ProductDetail({ dictionary, locale, product }: ProductDetailProp
                 : dictionary.selectSize}
             </p>
 
-            {/* Add to Bag Action */}
+            {/* WhatsApp Order Action */}
             <div className="product-actions">
               <button
-                className={`action-btn action-btn--primary product-actions__add-btn ${isAddedToBag ? "action-btn--success" : ""}`}
-                disabled={!selectedSize}
-                onClick={handleAddToBag}
+                className="action-btn action-btn--primary product-actions__add-btn"
+                onClick={handleOrderClick}
                 type="button"
               >
-                <span>
-                  {isAddedToBag
-                    ? dictionary.pdp.addedToBag
-                    : selectedSize
-                    ? `${dictionary.pdp.addToBag} — ${formatPrice(product, locale)}`
-                    : dictionary.selectSize}
-                </span>
+                <span>{dictionary.whatsapp.orderCTA}</span>
                 <span className="action-btn__arrow" aria-hidden="true">
-                  {isAddedToBag ? "✓" : isArabic ? "←" : "→"}
+                  {isArabic ? "←" : "→"}
                 </span>
               </button>
+
+              {selectionError && (
+                <p className="product-selection-error" role="alert">
+                  {selectionError}
+                </p>
+              )}
             </div>
           </div>
 
@@ -412,6 +444,19 @@ export function ProductDetail({ dictionary, locale, product }: ProductDetailProp
           )}
         </aside>
       </section>
+
+      {/* Reusable WhatsApp Order Flow Modal */}
+      {selectedSize && (
+        <WhatsAppOrderModal
+          dictionary={dictionary}
+          isOpen={isOrderModalOpen}
+          locale={locale}
+          onClose={() => setIsOrderModalOpen(false)}
+          product={product}
+          selectedSize={selectedSize}
+          selectedVariant={selectedVariant}
+        />
+      )}
     </main>
   );
 }
