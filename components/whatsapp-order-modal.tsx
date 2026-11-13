@@ -4,7 +4,7 @@ import Image from "next/image";
 import { createPortal } from "react-dom";
 import { useEffect, useRef, useState } from "react";
 import type { Product, ColourVariant, SizeOption, ProductImage } from "@/data/products";
-import { getLocalizedField } from "@/data/products";
+import { allProducts, getLocalizedField } from "@/data/products";
 import type { Dictionary } from "@/lib/dictionaries";
 import type { Locale } from "@/lib/i18n";
 import {
@@ -38,6 +38,8 @@ export function WhatsAppOrderModal({
   const [step, setStep] = useState<1 | 2>(1);
   const [customerName, setCustomerName] = useState("");
   const [city, setCity] = useState("");
+  const [activeProductId, setActiveProductId] = useState(product.id);
+  const [activeVariantId, setActiveVariantId] = useState(selectedVariant.id);
   const [modalSize, setModalSize] = useState<SizeOption | null>(selectedSize ?? null);
   const [nameError, setNameError] = useState("");
   const [cityError, setCityError] = useState("");
@@ -48,14 +50,22 @@ export function WhatsAppOrderModal({
   const nameInputRef = useRef<HTMLInputElement>(null);
 
   const t = dictionary.whatsapp;
-  const productName = getLocalizedField(product.name, locale);
-  const selectedColorName = getLocalizedField(selectedVariant.name, locale);
-  const activeSize = selectedSize ?? modalSize;
-  const formattedSize = activeSize ? formatOrderSize(product, activeSize, locale) : "";
+  const activeProduct = allProducts.find((item) => item.id === activeProductId) ?? product;
+  const activeVariant =
+    activeProduct.colourVariants.find((variant) => variant.id === activeVariantId) ??
+    activeProduct.colourVariants[0] ??
+    selectedVariant;
+  const productName = getLocalizedField(activeProduct.name, locale);
+  const selectedColorName = getLocalizedField(activeVariant.name, locale);
+  const activeSize = modalSize;
+  const formattedSize = activeSize ? formatOrderSize(activeProduct, activeSize, locale) : "";
 
-  const variantImages = selectedVariant.images;
+  const variantImages = activeVariant.images;
   const activeImage =
-    (selectedImage && variantImages.some((img) => img.id === selectedImage.id)
+    (activeProduct.id === product.id &&
+    activeVariant.id === selectedVariant.id &&
+    selectedImage &&
+    variantImages.some((img) => img.id === selectedImage.id)
       ? selectedImage
       : variantImages[0]) ?? {
       id: "default-img",
@@ -72,6 +82,8 @@ export function WhatsAppOrderModal({
       setCityError("");
       setSizeError("");
       setGeneralError("");
+      setActiveProductId(product.id);
+      setActiveVariantId(selectedVariant.id);
       setModalSize(selectedSize ?? null);
       // Lock background scrolling
       const originalOverflow = document.body.style.overflow;
@@ -87,7 +99,7 @@ export function WhatsAppOrderModal({
         clearTimeout(timer);
       };
     }
-  }, [isOpen, selectedSize]);
+  }, [isOpen, product.id, selectedVariant.id, selectedSize, selectedImage?.id]);
 
   // Handle ESC key to close
   useEffect(() => {
@@ -133,7 +145,7 @@ export function WhatsAppOrderModal({
   }
 
   const payload: WhatsAppOrderPayload = {
-    product,
+    product: activeProduct,
     selectedColorName,
     selectedSizeFormatted: formattedSize,
     customerName: customerName.trim(),
@@ -145,10 +157,14 @@ export function WhatsAppOrderModal({
   const whatsappUrl = buildWhatsAppOrderUrl(payload);
 
   function handleFinalConfirm(e: React.MouseEvent<HTMLAnchorElement>) {
-    if (!whatsappUrl) {
+    const currentOriginUrl = buildWhatsAppOrderUrl(payload, window.location.origin);
+    if (!currentOriginUrl) {
       e.preventDefault();
       setGeneralError(t.validation.generationError);
+      return;
     }
+    // Use the current site origin for the selected product image, including preview deployments.
+    e.currentTarget.href = currentOriginUrl;
   }
 
   return createPortal(
@@ -208,13 +224,60 @@ export function WhatsAppOrderModal({
                     <span className="order-summary-tag">{formattedSize || dictionary.selectSize}</span>
                   </div>
                   <span className="order-garment-summary__price">
-                    {product.price.amount} {getLocalizedField(product.price.currency, locale)}
+                    {activeProduct.price.amount} {getLocalizedField(activeProduct.price.currency, locale)}
                   </span>
                 </div>
               </div>
 
               {/* Form */}
               <form className="order-form" onSubmit={handleContinueToReview} noValidate>
+                <div className="order-form-group">
+                  <label htmlFor="order-product" className="order-form-label">
+                    <span>{t.modelLabel}</span>
+                    <span className="order-required-mark">*</span>
+                  </label>
+                  <select
+                    className="order-form-input"
+                    id="order-product"
+                    onChange={(event) => {
+                      const nextProduct = allProducts.find((item) => item.id === event.target.value);
+                      if (!nextProduct) return;
+                      setActiveProductId(nextProduct.id);
+                      setActiveVariantId(nextProduct.colourVariants[0]?.id ?? "");
+                      setModalSize(null);
+                      setSizeError("");
+                    }}
+                    required
+                    value={activeProduct.id}
+                  >
+                    {allProducts.map((item) => (
+                      <option key={item.id} value={item.id}>
+                        {getLocalizedField(item.name, locale)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="order-form-group">
+                  <label htmlFor="order-colour" className="order-form-label">
+                    <span>{t.summaryLabels.color}</span>
+                    <span className="order-required-mark">*</span>
+                  </label>
+                  <select
+                    className="order-form-input"
+                    id="order-colour"
+                    onChange={(event) => setActiveVariantId(event.target.value)}
+                    required
+                    value={activeVariant.id}
+                  >
+                    {activeProduct.colourVariants.map((variant) => (
+                      <option key={variant.id} value={variant.id}>
+                        {getLocalizedField(variant.name, locale)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
                 {/* Full Name Field */}
                 <div className="order-form-group">
                   <label htmlFor="order-customer-name" className="order-form-label">
@@ -231,6 +294,7 @@ export function WhatsAppOrderModal({
                     }}
                     placeholder={t.namePlaceholder}
                     ref={nameInputRef}
+                    required
                     type="text"
                     value={customerName}
                   />
@@ -241,37 +305,35 @@ export function WhatsAppOrderModal({
                   )}
                 </div>
 
-                {!selectedSize && (
-                  <div className="order-form-group">
-                    <label htmlFor="order-size" className="order-form-label">
-                      <span>{t.summaryLabels.size}</span>
-                      <span className="order-required-mark">*</span>
-                    </label>
-                    <select
-                      className={`order-form-input ${sizeError ? "order-form-input--error" : ""}`}
-                      id="order-size"
-                      onChange={(event) => {
-                        const nextSize = product.sizes.find((size) => size.id === event.target.value);
-                        setModalSize(nextSize ?? null);
-                        if (sizeError && nextSize) setSizeError("");
-                      }}
-                      required
-                      value={modalSize?.id ?? ""}
-                    >
-                      <option disabled value="">{dictionary.selectSize}</option>
-                      {product.sizes.map((size) => (
-                        <option key={size.id} value={size.id}>
-                          {getLocalizedField(size.label, locale)}
-                        </option>
-                      ))}
-                    </select>
-                    {sizeError && (
-                      <p className="order-form-error" role="alert">
-                        {sizeError}
-                      </p>
-                    )}
-                  </div>
-                )}
+                <div className="order-form-group">
+                  <label htmlFor="order-size" className="order-form-label">
+                    <span>{t.summaryLabels.size}</span>
+                    <span className="order-required-mark">*</span>
+                  </label>
+                  <select
+                    className={`order-form-input ${sizeError ? "order-form-input--error" : ""}`}
+                    id="order-size"
+                    onChange={(event) => {
+                      const nextSize = activeProduct.sizes.find((size) => size.id === event.target.value);
+                      setModalSize(nextSize ?? null);
+                      if (sizeError && nextSize) setSizeError("");
+                    }}
+                    required
+                    value={activeSize?.id ?? ""}
+                  >
+                    <option disabled value="">{dictionary.selectSize}</option>
+                    {activeProduct.sizes.map((size) => (
+                      <option key={size.id} value={size.id}>
+                        {getLocalizedField(size.label, locale)}
+                      </option>
+                    ))}
+                  </select>
+                  {sizeError && (
+                    <p className="order-form-error" role="alert">
+                      {sizeError}
+                    </p>
+                  )}
+                </div>
 
                 {/* City Field */}
                 <div className="order-form-group">
@@ -288,6 +350,7 @@ export function WhatsAppOrderModal({
                       if (cityError) setCityError("");
                     }}
                     placeholder={t.cityPlaceholder}
+                    required
                     type="text"
                     value={city}
                   />
@@ -350,7 +413,7 @@ export function WhatsAppOrderModal({
                   <div className="order-summary-row">
                     <span className="order-summary-label">{t.summaryLabels.price}</span>
                     <span className="order-summary-value">
-                      {product.price.amount} {getLocalizedField(product.price.currency, locale)}
+                      {activeProduct.price.amount} {getLocalizedField(activeProduct.price.currency, locale)}
                     </span>
                   </div>
                   <div className="order-summary-row">

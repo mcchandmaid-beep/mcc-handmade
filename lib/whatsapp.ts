@@ -1,6 +1,7 @@
 import type { Locale } from "@/lib/i18n";
 import type { Product, SizeOption } from "@/data/products";
 import { getLocalizedField } from "@/data/products";
+import { getDictionary } from "@/lib/dictionaries";
 
 /**
  * MCC Handmade — Centralized WhatsApp Configuration
@@ -71,19 +72,20 @@ export function getPublicBaseUrl(): string {
 }
 
 /**
- * Generates an absolute, public URL for a product image.
- * e.g., "/products/model-01/burgundy-01.png" -> "https://mcc-handmade.vercel.app/products/model-01/burgundy-01.png"
- * Strictly prevents any localhost URL from being output.
+ * Generates an absolute URL for a product image.
+ * Uses the supplied site origin when creating an order in the browser and the
+ * canonical public deployment when called without an origin.
  */
-export function getPublicProductImageUrl(imagePath?: string): string {
+export function getPublicProductImageUrl(imagePath?: string, origin?: string): string {
   if (!imagePath) return "";
+
+  const baseUrl = origin ? normalizeBaseUrl(origin) : getPublicBaseUrl();
 
   // If already an absolute URL, check if it's localhost or valid
   if (imagePath.startsWith("http://") || imagePath.startsWith("https://")) {
     if (isLocalhost(imagePath)) {
       try {
         const parsed = new URL(imagePath);
-        const baseUrl = getPublicBaseUrl();
         return `${baseUrl}${parsed.pathname}`;
       } catch {
         return "";
@@ -92,12 +94,12 @@ export function getPublicProductImageUrl(imagePath?: string): string {
     return imagePath;
   }
 
-  const baseUrl = getPublicBaseUrl();
   const normalizedPath = imagePath.startsWith("/") ? imagePath : `/${imagePath}`;
   const fullUrl = `${baseUrl}${normalizedPath}`;
 
-  // Fail-safe: ensure no localhost URL can ever be produced
-  if (isLocalhost(fullUrl)) {
+  // Keep the canonical fallback for server-side calls, while allowing the active
+  // browser origin when the order is generated from the current site.
+  if (!origin && isLocalhost(fullUrl)) {
     return `${VERIFIED_VERCEL_DOMAIN}${normalizedPath}`;
   }
 
@@ -145,7 +147,7 @@ export function formatOrderSize(
  * Constructs the exact textual message for WhatsApp orders.
  * Includes all customer fields and the clickable public product image URL.
  */
-export function buildWhatsAppMessage(payload: WhatsAppOrderPayload): string {
+export function buildWhatsAppMessage(payload: WhatsAppOrderPayload, origin?: string): string {
   const {
     product,
     selectedColorName,
@@ -157,25 +159,26 @@ export function buildWhatsAppMessage(payload: WhatsAppOrderPayload): string {
   } = payload;
   const productName = getLocalizedField(product.name, locale);
   const priceAmount = product.price.amount;
-  const absoluteImageUrl = getPublicProductImageUrl(imagePath);
+  const absoluteImageUrl = getPublicProductImageUrl(imagePath, origin);
+  const { whatsapp } = getDictionary(locale);
 
   if (locale === "ar") {
     const lines = [
-      "مرحباً MCC Handmade 👋",
+      whatsapp.newOrderTitle,
       "",
-      "أرغب في تأكيد طلب:",
+      whatsapp.customerDetailsTitle,
+      `${whatsapp.summaryLabels.customer} ${customerName}`,
+      `${whatsapp.summaryLabels.city} ${city}`,
       "",
-      `المنتج: ${productName}`,
-      `اللون: ${selectedColorName}`,
-      `المقاس: ${selectedSizeFormatted}`,
-      `الثمن: ${priceAmount} درهم`,
-      "",
-      `الاسم الكامل: ${customerName}`,
-      `المدينة: ${city}`,
+      whatsapp.productDetailsTitle,
+      `${whatsapp.modelLabel} ${productName}`,
+      `${whatsapp.summaryLabels.color} ${selectedColorName}`,
+      `${whatsapp.summaryLabels.size} ${selectedSizeFormatted}`,
+      `${whatsapp.summaryLabels.price} ${priceAmount} ${getLocalizedField(product.price.currency, locale)}`,
     ];
 
     if (absoluteImageUrl) {
-      lines.push("", "صورة المنتج:", absoluteImageUrl);
+      lines.push("", `${whatsapp.photoLabel}`, absoluteImageUrl);
     }
 
     lines.push("", "شكراً لتأكيد طلبي.");
@@ -183,21 +186,21 @@ export function buildWhatsAppMessage(payload: WhatsAppOrderPayload): string {
   }
 
   const lines = [
-    "Bonjour MCC Handmade 👋",
+    whatsapp.newOrderTitle,
     "",
-    "Je souhaite passer une commande :",
+    whatsapp.customerDetailsTitle,
+    `${whatsapp.summaryLabels.customer} ${customerName}`,
+    `${whatsapp.summaryLabels.city} ${city}`,
     "",
-    `Produit : ${productName}`,
-    `Couleur : ${selectedColorName}`,
-    `Taille : ${selectedSizeFormatted}`,
-    `Prix : ${priceAmount} DH`,
-    "",
-    `Nom complet : ${customerName}`,
-    `Ville : ${city}`,
+    whatsapp.productDetailsTitle,
+    `${whatsapp.modelLabel} ${productName}`,
+    `${whatsapp.summaryLabels.color} ${selectedColorName}`,
+    `${whatsapp.summaryLabels.size} ${selectedSizeFormatted}`,
+    `${whatsapp.summaryLabels.price} ${priceAmount} ${getLocalizedField(product.price.currency, locale)}`,
   ];
 
   if (absoluteImageUrl) {
-    lines.push("", "Photo du produit :", absoluteImageUrl);
+    lines.push("", `${whatsapp.photoLabel}`, absoluteImageUrl);
   }
 
   lines.push("", "Merci de confirmer ma commande.");
@@ -207,9 +210,9 @@ export function buildWhatsAppMessage(payload: WhatsAppOrderPayload): string {
 /**
  * Generates the WhatsApp click-to-chat URL using wa.me with encodeURIComponent.
  */
-export function buildWhatsAppOrderUrl(payload: WhatsAppOrderPayload): string {
+export function buildWhatsAppOrderUrl(payload: WhatsAppOrderPayload, origin?: string): string {
   try {
-    const message = buildWhatsAppMessage(payload);
+    const message = buildWhatsAppMessage(payload, origin);
     return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
   } catch (error) {
     console.error("Failed to generate WhatsApp URL", error);
