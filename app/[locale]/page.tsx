@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { AtelierStory } from "@/components/atelier-story";
+import { BrandStory } from "@/components/brand-story";
 import { CollectionSection } from "@/components/collection-section";
 import { CinematicHero } from "@/components/cinematic-hero";
 import { ShoppingReassurance } from "@/components/shopping-reassurance";
@@ -35,9 +35,9 @@ export async function generateMetadata({ params }: HomePageProps): Promise<Metad
       type: "website",
       images: [
         {
-          url: "/products/model-01/burgundy-01.png",
-          width: 928,
-          height: 1695,
+          url: "/images/hero-desktop.jpg",
+          width: 2752,
+          height: 1536,
           alt: dictionary.hero.headline,
         },
       ],
@@ -46,7 +46,7 @@ export async function generateMetadata({ params }: HomePageProps): Promise<Metad
       card: "summary_large_image",
       title: dictionary.meta.homeTitle,
       description: dictionary.meta.homeDescription,
-      images: ["/products/model-01/burgundy-01.png"],
+      images: ["/images/hero-desktop.jpg"],
     },
   };
 }
@@ -75,12 +75,19 @@ export default async function HomePage({ params }: HomePageProps) {
 
       <CinematicHero dictionary={dictionary} locale={locale} />
 
-      <div id="collection-preview">
-        <CollectionSection dictionary={dictionary} locale={locale} />
-      </div>
+      <CollectionSection dictionary={dictionary} locale={locale} />
 
-      <AtelierStory dictionary={dictionary} locale={locale} />
+      <section className="brand-marquee" aria-label={dictionary.brandMarquee}>
+        <p className="brand-marquee__accessibility-text">{dictionary.brandMarquee}</p>
+        <div className="brand-marquee__viewport" aria-hidden="true">
+          <div className="brand-marquee__track">
+            <span>{dictionary.brandMarquee}</span>
+            <span>{dictionary.brandMarquee}</span>
+          </div>
+        </div>
+      </section>
 
+      <BrandStory dictionary={dictionary} locale={locale} />
       <ShoppingReassurance dictionary={dictionary} locale={locale} />
     </div>
   );

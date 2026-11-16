@@ -348,7 +348,7 @@ export function DominoGallery({
             </Link>
 
             <a
-              href="#collection-preview"
+              href="#collection"
               className="action-btn action-btn--secondary domino-hero__cta-secondary"
             >
               <span>{secondaryCtaText}</span>

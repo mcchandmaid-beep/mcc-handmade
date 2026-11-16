@@ -37,6 +37,9 @@ export function ShoppingReassurance({ dictionary, locale }: ShoppingReassuranceP
         <article className="reassurance-card reveal-on-scroll reveal-delay-1">
           <div className="reassurance-card__header">
             <span className="mono-label reassurance-card__step-num">01</span>
+            <svg className="reassurance-card__icon" aria-hidden="true" viewBox="0 0 24 24" width={24} height={24}>
+              <path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z" />
+            </svg>
             <span className="reassurance-card__step-badge mono-label">
               {isArabic ? "الموديلات" : "CATALOGUE"}
             </span>
@@ -55,6 +58,9 @@ export function ShoppingReassurance({ dictionary, locale }: ShoppingReassuranceP
         <article className="reassurance-card reveal-on-scroll reveal-delay-2">
           <div className="reassurance-card__header">
             <span className="mono-label reassurance-card__step-num">02</span>
+            <svg className="reassurance-card__icon" aria-hidden="true" viewBox="0 0 24 24" width={24} height={24}>
+              <path d="M4 7v10m0-8h4m-4 4h7m-7 4h10m6-10v10M4 12h16" />
+            </svg>
             <span className="reassurance-card__step-badge mono-label">
               {isArabic ? "التفاصيل" : "GUIDE MESURES"}
             </span>
@@ -73,6 +79,10 @@ export function ShoppingReassurance({ dictionary, locale }: ShoppingReassuranceP
         <article className="reassurance-card reassurance-card--highlight reveal-on-scroll reveal-delay-3">
           <div className="reassurance-card__header">
             <span className="mono-label reassurance-card__step-num">03</span>
+            <svg className="reassurance-card__icon" aria-hidden="true" viewBox="0 0 24 24" width={24} height={24}>
+              <path d="M4 5.5h16v11H9l-5 3v-14Z" />
+              <path d="M8 10h8M8 13h5" />
+            </svg>
             <span className="reassurance-card__step-badge mono-label">
               {isArabic ? "واتساب" : "WHATSAPP"}
             </span>
@@ -86,7 +96,25 @@ export function ShoppingReassurance({ dictionary, locale }: ShoppingReassuranceP
               rel="noopener noreferrer"
               className="reassurance-card__link reassurance-card__link--whatsapp mono-label"
             >
-              <span>+212 689 532 341</span>
+              <span dir="ltr" className="inline-block">+212 689 532 341</span>
+              <span aria-hidden="true">{isArabic ? "←" : "→"}</span>
+            </a>
+          </div>
+        </article>
+        <article className="reassurance-card reveal-on-scroll reveal-delay-4">
+          <div className="reassurance-card__header">
+            <svg className="reassurance-card__icon" aria-hidden="true" viewBox="0 0 24 24" width={24} height={24}>
+              <path d="M4 13v-1a8 8 0 0 1 16 0v1" />
+              <path d="M4 12h3v6H5a1 1 0 0 1-1-1v-5Zm16 0h-3v6h2a1 1 0 0 0 1-1v-5Z" />
+              <path d="M17 18a5 5 0 0 1-5 3h-1" />
+            </svg>
+            <span className="mono-label reassurance-card__step-badge">{dictionary.nav.concierge}</span>
+          </div>
+          <h3 className="reassurance-card__title">{dictionary.concierge.title}</h3>
+          <p className="reassurance-card__desc">{dictionary.concierge.description}</p>
+          <div className="reassurance-card__link-wrap">
+            <a className="reassurance-card__link mono-label" href={`mailto:${dictionary.concierge.contactEmail}`}>
+              <span>{dictionary.concierge.contactEmail}</span>
               <span aria-hidden="true">{isArabic ? "←" : "→"}</span>
             </a>
           </div>

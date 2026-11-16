@@ -12,7 +12,7 @@ import {
   type Product,
 } from "@/data/products";
 import { WhatsAppOrderModal } from "@/components/whatsapp-order-modal";
-import type { Dictionary } from "@/lib/dictionaries";
+import { formatMessage, type Dictionary } from "@/lib/dictionaries";
 import type { Locale } from "@/lib/i18n";
 
 interface CollectionSectionProps {
@@ -38,6 +38,8 @@ function CollectionPieceCard({
   const [selectedVariantId, setSelectedVariantId] = useState(firstVariant.id);
   const [previewVariantId, setPreviewVariantId] = useState<string | null>(null);
   const [lastPreviewVariantId, setLastPreviewVariantId] = useState<string | null>(null);
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [isMediaHovered, setIsMediaHovered] = useState(false);
   const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
 
   const selectedVariant =
@@ -48,9 +50,12 @@ function CollectionPieceCard({
   const lastPreviewVariant = lastPreviewVariantId
     ? product.colourVariants.find((variant) => variant.id === lastPreviewVariantId)
     : undefined;
-  const selectedImage = selectedVariant.images[0]!;
-  const crossfadeVariant = previewVariant ?? lastPreviewVariant ?? selectedVariant;
-  const previewImage = crossfadeVariant.images[0]!;
+  const selectedImage = selectedVariant.images[activeImageIndex % selectedVariant.images.length]!;
+  const previewImage = previewVariant
+    ? previewVariant.images[0]!
+    : isMediaHovered && selectedVariant.images[1]
+      ? selectedVariant.images[1]
+      : lastPreviewVariant?.images[0] ?? selectedImage;
   const localizedName = getLocalizedField(product.name, locale);
   const selectedColorName = getLocalizedField(selectedVariant.name, locale);
   const previewColorName = previewVariant ? getLocalizedField(previewVariant.name, locale) : "";
@@ -74,47 +79,110 @@ function CollectionPieceCard({
         : "TAILLES 1 · 2 · 3"
       : "S · M · L · XL";
 
+  function selectVariant(variantId: string) {
+    setActiveImageIndex(0);
+    setSelectedVariantId(variantId);
+  }
+
+  function changeImage(direction: -1 | 1) {
+    setPreviewVariantId(null);
+    setLastPreviewVariantId(null);
+    setIsMediaHovered(false);
+    setActiveImageIndex((current) => {
+      const count = selectedVariant.images.length;
+      return (current + direction + count) % count;
+    });
+  }
+
   return (
     <article className={"collection-piece-card reveal-on-scroll reveal-delay-" + String(index + 1)}>
-      <Link
-        href={"/" + locale + "/" + product.id}
+      <div
         className="collection-piece-card__media-wrap"
-        data-cursor="view"
-        aria-label={localizedName + " — " + formatPrice(product, locale)}
+        onMouseEnter={() => setIsMediaHovered(true)}
+        onMouseLeave={() => setIsMediaHovered(false)}
       >
-        <div className="collection-piece-card__media">
-          <Image
-            alt={localizedName + " — " + selectedColorName + " — MCC Handmade"}
-            aria-hidden={Boolean(previewVariant)}
-            className="collection-piece-card__image collection-piece-card__image--visible"
-            fill
-            loading="lazy"
-            sizes="(max-width: 640px) 100vw, (max-width: 900px) 50vw, 33vw"
-            src={selectedImage.src}
-          />
-          <Image
-            key={crossfadeVariant.id}
-            alt={previewVariant ? localizedName + " — " + previewColorName + " — MCC Handmade" : ""}
-            aria-hidden={!previewVariant}
-            className={
-              "collection-piece-card__image collection-piece-card__image--preview" +
-              (previewVariant ? " collection-piece-card__image--visible" : "")
-            }
-            fill
-            loading="lazy"
-            onTransitionEnd={(event) => {
-              if (event.propertyName === "opacity" && !previewVariantId) {
-                setLastPreviewVariantId(null);
+        <Link
+          href={"/" + locale + "/" + product.id}
+          className="collection-piece-card__media-link"
+          data-cursor="view"
+          aria-label={localizedName + " — " + formatPrice(product, locale)}
+        >
+          <div className="collection-piece-card__media">
+            <Image
+              alt={localizedName + " — " + selectedColorName + " — MCC Handmade"}
+              aria-hidden={Boolean(previewVariant) || isMediaHovered}
+              className="collection-piece-card__image collection-piece-card__image--visible"
+              fill
+              loading="lazy"
+              sizes="(max-width: 767px) 50vw, (max-width: 1100px) 33vw, 25vw"
+              src={selectedImage.src}
+            />
+            <Image
+              key={previewImage.id}
+              alt={
+                previewVariant
+                  ? localizedName + " — " + previewColorName + " — MCC Handmade"
+                  : isMediaHovered
+                    ? localizedName + " — " + selectedColorName + " — MCC Handmade"
+                    : ""
               }
-            }}
-            sizes="(max-width: 640px) 100vw, (max-width: 900px) 50vw, 33vw"
-            src={previewImage.src}
-          />
-          <div className="collection-piece-card__badge mono-label">
-            [ {indexLabel} / 03 · {badgeLabel} ]
+              aria-hidden={!previewVariant && !isMediaHovered}
+              className={
+                "collection-piece-card__image collection-piece-card__image--preview" +
+                (previewVariant || isMediaHovered ? " collection-piece-card__image--visible" : "")
+              }
+              fill
+              loading="lazy"
+              onTransitionEnd={(event) => {
+                if (event.propertyName === "opacity" && !previewVariantId) {
+                  setLastPreviewVariantId(null);
+                }
+              }}
+              sizes="(max-width: 767px) 50vw, (max-width: 1100px) 33vw, 25vw"
+              src={previewImage.src}
+            />
+            <div className="collection-piece-card__badge mono-label">
+              [ {indexLabel} / 03 · {badgeLabel} ]
+            </div>
           </div>
-        </div>
-      </Link>
+        </Link>
+
+        {selectedVariant.images.length > 1 && (
+          <div className="collection-piece-card__image-switchers">
+            <button
+              aria-label={formatMessage(dictionary.showImage, {
+                current: (activeImageIndex - 1 + selectedVariant.images.length) % selectedVariant.images.length + 1,
+                total: selectedVariant.images.length,
+              })}
+              className="collection-piece-card__image-switch collection-piece-card__image-switch--previous"
+              onClick={() => changeImage(-1)}
+              type="button"
+            >
+              <span aria-hidden="true">{isArabic ? "→" : "←"}</span>
+            </button>
+            <button
+              aria-label={formatMessage(dictionary.showImage, {
+                current: (activeImageIndex + 1) % selectedVariant.images.length + 1,
+                total: selectedVariant.images.length,
+              })}
+              className="collection-piece-card__image-switch collection-piece-card__image-switch--next"
+              onClick={() => changeImage(1)}
+              type="button"
+            >
+              <span aria-hidden="true">{isArabic ? "←" : "→"}</span>
+            </button>
+          </div>
+        )}
+
+        <button
+          aria-label={`${dictionary.whatsapp.orderCTA}: ${localizedName} — ${selectedColorName}`}
+          className="collection-piece-card__quick-order"
+          onClick={() => setIsOrderModalOpen(true)}
+          type="button"
+        >
+          <span aria-hidden="true">+</span>
+        </button>
+      </div>
 
       <div className="collection-piece-card__content">
         <div className="collection-piece-card__meta">
@@ -147,7 +215,7 @@ function CollectionPieceCard({
                   (isSelected ? " collection-piece-card__swatch--selected" : "")
                 }
                 key={variant.id}
-                onClick={() => setSelectedVariantId(variant.id)}
+                onClick={() => selectVariant(variant.id)}
                 onFocus={() => {
                   setLastPreviewVariantId(variant.id);
                   setPreviewVariantId(variant.id);

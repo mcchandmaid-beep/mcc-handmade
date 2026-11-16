@@ -14,16 +14,6 @@ interface MccHeaderProps {
 
 export function MccHeader({ dictionary, locale }: MccHeaderProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 30);
-    };
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
 
   useEffect(() => {
     if (isMobileMenuOpen) {
@@ -41,15 +31,15 @@ export function MccHeader({ dictionary, locale }: MccHeaderProps) {
   }
 
   return (
-    <header
-      className={
-        "site-header " +
-        (isScrolled ? "site-header--scrolled glassmorphism" : "")
-      }
-    >
+    <>
+      <div className="site-announcement-bar mono-label">
+        <span className="site-announcement-bar__desktop">{dictionary.hero.eyebrow}</span>
+        <span className="site-announcement-bar__mobile">{dictionary.mobileAnnouncement}</span>
+      </div>
+      <header className="site-header">
       <div className="site-header__inner">
         {/* Left: Nav items on desktop */}
-        <nav className="site-nav" aria-label="Navigation principale">
+        <nav className="site-nav" aria-label={locale === "ar" ? "التنقل الرئيسي" : "Navigation principale"}>
           <ul className="site-nav__list">
             <li>
               <Link href={`/${locale}/collection`} className="site-nav__link">
@@ -57,7 +47,7 @@ export function MccHeader({ dictionary, locale }: MccHeaderProps) {
               </Link>
             </li>
             <li>
-              <Link href={`/${locale}#atelier`} className="site-nav__link">
+              <Link href={`/${locale}#collection`} className="site-nav__link">
                 {dictionary.nav.atelier}
               </Link>
             </li>
@@ -106,6 +96,13 @@ export function MccHeader({ dictionary, locale }: MccHeaderProps) {
             type="button"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           >
+            <svg className="mobile-nav-toggle__icon" aria-hidden="true" viewBox="0 0 24 24" width={24} height={24}>
+              {isMobileMenuOpen ? (
+                <path d="m6 6 12 12M18 6 6 18" />
+              ) : (
+                <path d="M4 7h16M4 12h16M4 17h16" />
+              )}
+            </svg>
             <span className="mobile-nav-toggle__label">
               {isMobileMenuOpen ? dictionary.nav.closeMenu : dictionary.nav.menu}
             </span>
@@ -120,7 +117,9 @@ export function MccHeader({ dictionary, locale }: MccHeaderProps) {
         aria-hidden={!isMobileMenuOpen}
       >
         <div className="mobile-nav-drawer__header">
-          <span className="mono-label">[ MENU ÉDITORIAL ]</span>
+          <span className="mono-label">
+            {locale === "ar" ? "[ القائمة الرئيسية ]" : "[ MENU ÉDITORIAL ]"}
+          </span>
           <button
             aria-label={dictionary.nav.closeMenu}
             className="mobile-nav-drawer__close mono-label"
@@ -139,7 +138,7 @@ export function MccHeader({ dictionary, locale }: MccHeaderProps) {
               </Link>
             </li>
             <li className="mobile-nav__item">
-              <Link href={`/${locale}#atelier`} className="mobile-nav__link" onClick={closeMenu}>
+              <Link href={`/${locale}#collection`} className="mobile-nav__link" onClick={closeMenu}>
                 {dictionary.nav.atelier}
               </Link>
             </li>
@@ -164,6 +163,7 @@ export function MccHeader({ dictionary, locale }: MccHeaderProps) {
           </p>
         </div>
       </div>
-    </header>
+      </header>
+    </>
   );
 }

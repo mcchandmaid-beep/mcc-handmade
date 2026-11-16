@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import Link from "next/link";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import type { Dictionary } from "@/lib/dictionaries";
@@ -123,6 +124,10 @@ export function EditorialStatement({ dictionary, locale }: EditorialStatementPro
             <p className="editorial-statement__description">
               {dictionary.statement.body}
             </p>
+            <Link className="action-btn action-btn--primary editorial-statement__cta" href={`/${locale}/collection`}>
+              <span>{dictionary.hero.cta}</span>
+              <span className="action-btn__arrow" aria-hidden="true">{isArabic ? "←" : "→"}</span>
+            </Link>
           </div>
 
           <div className="editorial-statement__meta-col">

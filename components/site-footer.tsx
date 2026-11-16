@@ -1,5 +1,8 @@
+import Image from "next/image";
 import Link from "next/link";
 import { LanguageSwitcher } from "./language-switcher";
+import { WHATSAPP_NUMBER } from "@/lib/whatsapp";
+import { NewsletterSignup } from "@/components/newsletter-signup";
 import type { Dictionary } from "@/lib/dictionaries";
 import type { Locale } from "@/lib/i18n";
 
@@ -19,8 +22,24 @@ export function SiteFooter({ dictionary, locale }: SiteFooterProps) {
 
       <div className="editorial-footer__main">
         <div className="editorial-footer__brand-col">
-          <h2 className="editorial-footer__brand-title">MCC HANDMADE</h2>
+          <Link className="editorial-footer__brand-mark" href={`/${locale}`} aria-label="MCC Handmade">
+            <Image alt="MCC Handmade" height={44} src="/mcc-handmade-logo-trimmed.png" width={144} />
+          </Link>
           <p className="editorial-footer__tagline">{dictionary.footer.brandTagline}</p>
+          <div className="editorial-footer__social" aria-label={dictionary.nav.concierge}>
+            <a href={`https://wa.me/${WHATSAPP_NUMBER}`} target="_blank" rel="noopener noreferrer" aria-label={dictionary.nav.concierge}>
+              <svg aria-hidden="true" viewBox="0 0 24 24" width={20} height={20}>
+                <path d="M20 11.5a8 8 0 0 1-11.8 7L4 20l1.5-4A8 8 0 1 1 20 11.5Z" />
+                <path d="M9 8.5c.5 2.5 2 4 4.5 4.5" />
+              </svg>
+            </a>
+            <a href={`mailto:${dictionary.concierge.contactEmail}`} aria-label={dictionary.concierge.contactEmailLabel}>
+              <svg aria-hidden="true" viewBox="0 0 24 24" width={20} height={20}>
+                <rect x="3.5" y="5.5" width="17" height="13" />
+                <path d="m4 7 8 6 8-6" />
+              </svg>
+            </a>
+          </div>
           <div className="editorial-footer__lang">
             <LanguageSwitcher label={dictionary.languageSwitcherLabel} locale={locale} />
           </div>
@@ -69,7 +88,7 @@ export function SiteFooter({ dictionary, locale }: SiteFooterProps) {
                   rel="noopener noreferrer"
                   className="editorial-footer__link-item"
                 >
-                  {locale === "ar" ? "واتساب : 2341 532 689 212+" : "WhatsApp : +212 689 532 341"}
+                  {locale === "ar" ? <>واتساب : <span dir="ltr" className="inline-block">+212 689 532 341</span></> : "WhatsApp : +212 689 532 341"}
                 </a>
               </li>
               <li>
@@ -77,6 +96,21 @@ export function SiteFooter({ dictionary, locale }: SiteFooterProps) {
               </li>
             </ul>
           </div>
+        </div>
+
+        <div className="editorial-footer__contact-col">
+          <span className="mono-label editorial-footer__col-label">
+            [ {dictionary.footer.conciergeTitle} ]
+          </span>
+          <h2 className="footer-newsletter__title">{dictionary.concierge.title}</h2>
+          <p className="footer-newsletter__subtitle">{dictionary.concierge.description}</p>
+          <a className="editorial-footer__contact-link" href={`mailto:${dictionary.concierge.contactEmail}`}>
+            {dictionary.concierge.contactEmail}
+          </a>
+          <a className="editorial-footer__contact-link" href={`https://wa.me/${WHATSAPP_NUMBER}`} target="_blank" rel="noopener noreferrer">
+            <span dir="ltr" className="inline-block">+212 689 532 341</span>
+          </a>
+          <NewsletterSignup dictionary={dictionary} locale={locale} />
         </div>
       </div>
 

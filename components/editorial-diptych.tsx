@@ -51,28 +51,6 @@ export function EditorialDiptych({ dictionary, locale }: EditorialDiptychProps) 
         "-=0.9"
       );
 
-      // 2. Continuous Parallax Relationship during scroll
-      gsap.to(figureARef.current, {
-        scrollTrigger: {
-          trigger: sectionEl,
-          start: "top bottom",
-          end: "bottom top",
-          scrub: 1.2,
-        },
-        yPercent: 5,
-        ease: "none",
-      });
-
-      gsap.to(figureBRef.current, {
-        scrollTrigger: {
-          trigger: sectionEl,
-          start: "top bottom",
-          end: "bottom top",
-          scrub: 1.2,
-        },
-        yPercent: -8,
-        ease: "none",
-      });
     }, sectionRef);
 
     return () => {

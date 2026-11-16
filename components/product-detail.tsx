@@ -392,7 +392,7 @@ export function ProductDetail({ dictionary, locale, product }: ProductDetailProp
               </button>
 
               <p className="product-order-note mono-label">
-                [ {isArabic ? "تواصل وتأكيد فوري عبر واتساب · 2341 532 689 212+" : "COMMANDE DIRECTE SUR WHATSAPP · +212 689 532 341"} ]
+                [ {isArabic ? <>تواصل وتأكيد فوري عبر واتساب · <span dir="ltr" className="inline-block">+212 689 532 341</span></> : "COMMANDE DIRECTE SUR WHATSAPP · +212 689 532 341"} ]
               </p>
 
               {selectionError && (

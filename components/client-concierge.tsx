@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import type { FormEvent } from "react";
+import { NewsletterSignup } from "@/components/newsletter-signup";
 import type { Dictionary } from "@/lib/dictionaries";
 import type { Locale } from "@/lib/i18n";
 
@@ -11,16 +10,6 @@ interface ClientConciergeProps {
 }
 
 export function ClientConcierge({ dictionary, locale }: ClientConciergeProps) {
-  const [email, setEmail] = useState("");
-  const [isSubscribed, setIsSubscribed] = useState(false);
-  const isArabic = locale === "ar";
-
-  function handleSubmit(event: FormEvent) {
-    event.preventDefault();
-    if (!email) return;
-    setIsSubscribed(true);
-  }
-
   return (
     <section className="client-concierge" id="concierge" aria-labelledby="concierge-title">
       {/* Top Hairline Bar */}
@@ -54,41 +43,7 @@ export function ClientConcierge({ dictionary, locale }: ClientConciergeProps) {
 
         {/* Right Column: Private Gazette / Newsletter */}
         <div className="client-concierge__newsletter-col reveal-on-scroll reveal-delay-2">
-          <div className="concierge-card">
-            <span className="mono-label">[ GAZETTE ÉDITORIALE ]</span>
-            <h3 className="concierge-card__title">
-              {dictionary.concierge.newsletterTitle}
-            </h3>
-            <p className="concierge-card__subtitle">
-              {dictionary.concierge.newsletterSubtitle}
-            </p>
-
-            {isSubscribed ? (
-              <div className="concierge-card__feedback" role="status">
-                <span className="mono-label">✓ {dictionary.concierge.subscribedNote}</span>
-              </div>
-            ) : (
-              <form className="concierge-form" onSubmit={handleSubmit}>
-                <div className="concierge-form__field">
-                  <input
-                    aria-label={dictionary.concierge.placeholder}
-                    className="concierge-form__input"
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder={dictionary.concierge.placeholder}
-                    required
-                    type="email"
-                    value={email}
-                  />
-                  <button className="action-btn action-btn--primary client-concierge__submit" type="submit">
-                    <span>{dictionary.concierge.subscribe}</span>
-                    <span className="action-btn__arrow" aria-hidden="true">
-                      {isArabic ? "←" : "→"}
-                    </span>
-                  </button>
-                </div>
-              </form>
-            )}
-          </div>
+          <NewsletterSignup dictionary={dictionary} locale={locale} />
         </div>
       </div>
     </section>

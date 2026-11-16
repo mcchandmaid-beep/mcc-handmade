@@ -43,7 +43,6 @@ export function AtelierStory({ dictionary, locale }: AtelierStoryProps) {
       aria-labelledby="atelier-title"
       ref={sectionRef}
     >
-      <div id="story" style={{ position: "absolute", top: 0 }} aria-hidden="true" />
       {/* Background Gradient Ambiance */}
       <div className="atelier-gradient-bg" aria-hidden="true">
         <div className="atelier-gradient-glow atelier-gradient-glow--clay" />

@@ -31,6 +31,8 @@ export const dictionaries = {
       menu: "Menu",
       closeMenu: "Fermer",
     },
+    mobileAnnouncement: "LIVRAISON RAPIDE DANS TOUTES LES VILLES",
+    brandMarquee: "SAVOIR-FAIRE MAROCAIN · MODE MODESTE CONTEMPORAINE · LIVRAISON RAPIDE DANS TOUTES LES VILLES",
     pdp: {
       addToBag: "AJOUTER AU PANIER",
       addedToBag: "AJOUTÉ AU PANIER",
@@ -214,6 +216,7 @@ export const dictionaries = {
       description: "Pour toute interrogation concernant les mesures, nos pièces ou leur disponibilité.",
       contactEmailLabel: "Écrire directement à l'atelier :",
       contactEmail: "contact@mcchandmade.com",
+      newsletterEyebrow: "GAZETTE ÉDITORIALE",
       newsletterTitle: "Gazette de l'Atelier",
       newsletterSubtitle: "Recevez en avant-première l'ouverture des nouvelles créations.",
       placeholder: "Votre adresse e-mail",
@@ -264,6 +267,8 @@ export const dictionaries = {
       menu: "القائمة",
       closeMenu: "إغلاق",
     },
+    mobileAnnouncement: "توصيل سريع لجميع المدن",
+    brandMarquee: "صناعة مغربية متقنة · أزياء محتشمة معاصرة · توصيل سريع لجميع المدن",
     pdp: {
       addToBag: "إضافة إلى السلة",
       addedToBag: "تمت الإضافة إلى السلة",
@@ -325,7 +330,7 @@ export const dictionaries = {
     hero: {
       eyebrow: "MCC HANDMADE · أزياء نسائية",
       modelTag: "مجموعة 2026",
-      headline: "أناقة بسيطة، بأسلوبك الخاص.",
+      headline: "جوهر الأناقة الهادئة",
       title: "أناقة بسيطة، بأسلوبك الخاص.",
       supporting: "اكتشفي تصاميم تجمع بين الأناقة العصرية والراحة، لترافقك في مختلف لحظات يومك.",
       subtitle: "اكتشفي تصاميم تجمع بين الأناقة العصرية والراحة، لترافقك في مختلف لحظات يومك.",
@@ -447,6 +452,7 @@ export const dictionaries = {
       description: "لأي استفسار بشأن المقاسات، تفاصيل القطع أو مواعيد التوفر القادمة، نسعد بمساعدتكم.",
       contactEmailLabel: "مراسلة الدار مباشرة :",
       contactEmail: "contact@mcchandmade.com",
+      newsletterEyebrow: "النشرة التحريرية",
       newsletterTitle: "رسائل المحترف",
       newsletterSubtitle: "كوني أول من يتعرف على إصداراتنا وتحديثات التصاميم الجديدة.",
       placeholder: "بريدك الإلكتروني",
