@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
-import Image from "next/image";
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { allProducts, formatPrice, getLocalizedField } from "@/data/products";
+import { CollectionProductGrid } from "@/components/collection-section";
 import { getDictionary } from "@/lib/dictionaries";
 import { isLocale, locales, type Locale } from "@/lib/i18n";
 
@@ -114,96 +112,9 @@ export default async function CollectionPage({ params }: CollectionPageProps) {
         </div>
       </section>
 
-      {/* Editorial Two-Product Grid */}
+      {/* Shared homepage and collection product grid */}
       <section className="collection-grid-section" aria-label={dictionary.nav.collection}>
-        <div className="collection-grid">
-          {allProducts.map((product, idx) => {
-            const firstVariant = product.colourVariants[0]!;
-            const heroImage = firstVariant.images[0]!;
-            const totalVariants = product.colourVariants.length;
-            const productNum = String(idx + 1).padStart(2, "0");
-
-            return (
-              <article
-                key={product.id}
-                className="collection-card"
-                data-cursor="discover"
-              >
-                <Link
-                  href={`/${locale}/${product.id}`}
-                  className="collection-card__media-link"
-                  aria-label={`${getLocalizedField(product.name, locale)} — ${formatPrice(product, locale)}`}
-                >
-                  <div className="collection-card__media">
-                    <Image
-                      alt={`${getLocalizedField(product.name, locale)} — MCC Handmade`}
-                      className="collection-card__image"
-                      fill
-                      priority={idx === 0}
-                      sizes="(max-width: 900px) 100vw, 50vw"
-                      src={heroImage.src}
-                    />
-                    <div className="collection-card__media-overlay">
-                      <span className="collection-card__view-btn action-btn action-btn--primary">
-                        <span>{dictionary.collection.viewDetails}</span>
-                        <span aria-hidden="true">{isArabic ? "←" : "→"}</span>
-                      </span>
-                    </div>
-
-                    <div className="collection-card__badge" aria-hidden="true">
-                      <span className="mono-label">[ {productNum} / 03 ]</span>
-                    </div>
-                  </div>
-                </Link>
-
-                <div className="collection-card__info">
-                  <div className="collection-card__header">
-                    <div>
-                      <span className="mono-label collection-card__index-tag">
-                        [ {isArabic ? `0${idx + 1} · تصميم أساسي` : `0${idx + 1} · PIÈCE MAÎTRESSE`} ]
-                      </span>
-                      <h2 className="collection-card__title">
-                        <Link href={`/${locale}/${product.id}`}>
-                          {getLocalizedField(product.name, locale)}
-                        </Link>
-                      </h2>
-                    </div>
-                    <span className="collection-card__price mono-label">
-                      {formatPrice(product, locale)}
-                    </span>
-                  </div>
-
-                  {product.tagline && (
-                    <p className="collection-card__tagline">
-                      {getLocalizedField(product.tagline, locale)}
-                    </p>
-                  )}
-
-                  {product.details?.shortDescription && (
-                    <p className="collection-card__desc">
-                      {getLocalizedField(product.details.shortDescription, locale)}
-                    </p>
-                  )}
-
-                  <div className="collection-card__specs">
-                    <div className="collection-spec-pill">
-                      <span className="mono-label">
-                        {isArabic ? `${totalVariants} ألوان` : `${totalVariants} TEINTES`}
-                      </span>
-                    </div>
-                    <div className="collection-spec-pill">
-                      <span className="mono-label">
-                        {product.id === "model-02"
-                          ? isArabic ? "3 مقاسات مجمعة" : "TAILLES 1 · 2 · 3"
-                          : "S · M · L · XL"}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </article>
-            );
-          })}
-        </div>
+        <CollectionProductGrid dictionary={dictionary} locale={locale} />
       </section>
     </main>
   );

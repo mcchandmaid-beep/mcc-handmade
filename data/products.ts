@@ -92,7 +92,6 @@ export const model01: Product = {
       images: [
         { id: "model-01-burgundy-01", src: "/products/model-01/burgundy-01.png", width: 928, height: 1695 },
         { id: "model-01-burgundy-02", src: "/products/model-01/burgundy-02.png", width: 1000, height: 1573 },
-        { id: "model-01-burgundy-03", src: "/products/model-01/burgundy-03.png", width: 964, height: 1632 },
       ],
       availabilityBySize: model01Availability(),
     },

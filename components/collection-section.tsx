@@ -4,9 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import {
-  model01,
-  model02,
-  model03,
+  allProducts,
   formatPrice,
   getLocalizedField,
   type Product,
@@ -25,6 +23,8 @@ interface CollectionPieceCardProps {
   locale: Locale;
   product: Product;
   index: number;
+  totalProducts: number;
+  defaultVariantId: string;
 }
 
 function CollectionPieceCard({
@@ -32,10 +32,12 @@ function CollectionPieceCard({
   locale,
   product,
   index,
+  totalProducts,
+  defaultVariantId,
 }: CollectionPieceCardProps) {
   const isArabic = locale === "ar";
   const firstVariant = product.colourVariants[0]!;
-  const [selectedVariantId, setSelectedVariantId] = useState(firstVariant.id);
+  const [selectedVariantId, setSelectedVariantId] = useState(defaultVariantId);
   const [previewVariantId, setPreviewVariantId] = useState<string | null>(null);
   const [lastPreviewVariantId, setLastPreviewVariantId] = useState<string | null>(null);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
@@ -59,7 +61,7 @@ function CollectionPieceCard({
   const localizedName = getLocalizedField(product.name, locale);
   const selectedColorName = getLocalizedField(selectedVariant.name, locale);
   const previewColorName = previewVariant ? getLocalizedField(previewVariant.name, locale) : "";
-  const indexLabel = String(index + 1).padStart(2, "0");
+  const indexLabel = `${String(index + 1).padStart(2, "0")} / ${String(totalProducts).padStart(2, "0")}`;
   const badgeLabel =
     product.id === "model-01"
       ? isArabic
@@ -69,9 +71,13 @@ function CollectionPieceCard({
         ? isArabic
           ? "طقم بقبعة"
           : "ENSEMBLE CAPUCHE"
-        : isArabic
-          ? "فستان تونك طويل"
-          : "ROBE-TUNIQUE";
+        : product.id === "model-03"
+          ? isArabic
+            ? "فستان تونك طويل"
+            : "ROBE-TUNIQUE"
+          : isArabic
+            ? `الموديل ${String(index + 1).padStart(2, "0")}`
+            : `MODÈLE ${String(index + 1).padStart(2, "0")}`;
   const sizeSummary =
     product.id === "model-02"
       ? isArabic
@@ -114,7 +120,7 @@ function CollectionPieceCard({
               className="collection-piece-card__image collection-piece-card__image--visible"
               fill
               loading="lazy"
-              sizes="(max-width: 767px) 50vw, (max-width: 1100px) 33vw, 25vw"
+              sizes="(max-width: 767px) 100vw, 33vw"
               src={selectedImage.src}
             />
             <Image
@@ -138,11 +144,11 @@ function CollectionPieceCard({
                   setLastPreviewVariantId(null);
                 }
               }}
-              sizes="(max-width: 767px) 50vw, (max-width: 1100px) 33vw, 25vw"
+              sizes="(max-width: 767px) 100vw, 33vw"
               src={previewImage.src}
             />
             <div className="collection-piece-card__badge mono-label">
-              [ {indexLabel} / 03 · {badgeLabel} ]
+              [ {indexLabel} · {badgeLabel} ]
             </div>
           </div>
         </Link>
@@ -279,16 +285,40 @@ function CollectionPieceCard({
   );
 }
 
-export function CollectionSection({ dictionary, locale }: CollectionSectionProps) {
-  const isArabic = locale === "ar";
-  const products = [model01, model02, model03];
+const defaultVariantIds: Readonly<Record<string, string>> = {
+  "model-01": "burgundy",
+  "model-02": "vert-kaki",
+  "model-03": "blanc-casse",
+};
+
+export function CollectionProductGrid({ dictionary, locale }: CollectionSectionProps) {
+  const products = allProducts.map((product) => ({
+    product,
+    defaultVariantId: defaultVariantIds[product.id] ?? product.colourVariants[0]!.id,
+  }));
 
   return (
-    <section
-      aria-labelledby="collection-title"
-      className="collection-section"
-      id="collection"
-    >
+    <div className="collection-pieces-grid">
+      {products.map(({ product, defaultVariantId }, index) => (
+        <CollectionPieceCard
+          dictionary={dictionary}
+          defaultVariantId={defaultVariantId}
+          index={index}
+          key={product.id}
+          locale={locale}
+          product={product}
+          totalProducts={products.length}
+        />
+      ))}
+    </div>
+  );
+}
+
+export function CollectionSection({ dictionary, locale }: CollectionSectionProps) {
+  const isArabic = locale === "ar";
+
+  return (
+    <section aria-labelledby="collection-title" className="collection-section" id="collection">
       <div className="collection-section__top-bar">
         <span className="mono-label">[ {dictionary.collection.eyebrow} ]</span>
         <span className="mono-label">
@@ -309,17 +339,7 @@ export function CollectionSection({ dictionary, locale }: CollectionSectionProps
         </p>
       </div>
 
-      <div className="collection-pieces-grid">
-        {products.map((product, index) => (
-          <CollectionPieceCard
-            dictionary={dictionary}
-            index={index}
-            key={product.id}
-            locale={locale}
-            product={product}
-          />
-        ))}
-      </div>
+      <CollectionProductGrid dictionary={dictionary} locale={locale} />
 
       <div className="collection-section__footer">
         <Link className="collection-section__all-link" href={"/" + locale + "/collection"}>

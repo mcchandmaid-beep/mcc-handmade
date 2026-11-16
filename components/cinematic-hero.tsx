@@ -4,10 +4,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import type { TouchEvent } from "react";
-import { getLocalizedField, model01 } from "@/data/products";
-import type { ColourVariant } from "@/data/products";
-import { formatMessage, type Dictionary } from "@/lib/dictionaries";
+import { getLocalizedField, model01, model02, model03 } from "@/data/products";
+import type { ColourVariant, Product } from "@/data/products";
+import type { Dictionary } from "@/lib/dictionaries";
 import type { Locale } from "@/lib/i18n";
+
+const heroModels: readonly Product[] = [model01, model02, model03];
 
 interface CinematicHeroProps {
   dictionary: Dictionary;
@@ -15,55 +17,58 @@ interface CinematicHeroProps {
 }
 
 export function CinematicHero({ dictionary, locale }: CinematicHeroProps) {
+  const [selectedModelId, setSelectedModelId] = useState(model01.id);
   const [selectedVariantId, setSelectedVariantId] = useState(model01.colourVariants[0]!.id);
-  const [previousVariantId, setPreviousVariantId] = useState<string | null>(null);
+  const [previousImageSrc, setPreviousImageSrc] = useState<string | null>(null);
   const [imageReady, setImageReady] = useState(true);
   const touchStartX = useRef<number | null>(null);
   const isArabic = locale === "ar";
 
+  const selectedModel = heroModels.find((model) => model.id === selectedModelId) ?? model01;
   const selectedVariant =
-    model01.colourVariants.find((variant) => variant.id === selectedVariantId) ??
-    model01.colourVariants[0]!;
-  const previousVariant = previousVariantId
-    ? model01.colourVariants.find((variant) => variant.id === previousVariantId)
-    : undefined;
+    selectedModel.colourVariants.find((variant) => variant.id === selectedVariantId) ??
+    selectedModel.colourVariants[0]!;
   const mainImage = selectedVariant.images[1] ?? selectedVariant.images[0]!;
 
+  function selectModel(model: Product) {
+    if (model.id === selectedModel.id) return;
+
+    setPreviousImageSrc(mainImage.src);
+    setImageReady(false);
+    setSelectedModelId(model.id);
+    setSelectedVariantId(model.colourVariants[0]!.id);
+  }
+
   function selectVariant(variant: ColourVariant) {
-    if (variant.id === selectedVariantId) return;
-    setPreviousVariantId(selectedVariantId);
+    if (variant.id === selectedVariant.id) return;
+
+    setPreviousImageSrc(mainImage.src);
     setImageReady(false);
     setSelectedVariantId(variant.id);
   }
 
-  function cycleVariant(direction: -1 | 1) {
-    const currentIndex = model01.colourVariants.findIndex(
-      (variant) => variant.id === selectedVariantId,
-    );
-    const nextIndex =
-      (currentIndex + direction + model01.colourVariants.length) %
-      model01.colourVariants.length;
-    selectVariant(model01.colourVariants[nextIndex]!);
+  function cycleModel(direction: -1 | 1) {
+    const currentIndex = heroModels.findIndex((model) => model.id === selectedModel.id);
+    const nextIndex = (currentIndex + direction + heroModels.length) % heroModels.length;
+    selectModel(heroModels[nextIndex]!);
   }
 
   useEffect(() => {
-    if (model01.colourVariants.length < 2) return;
+    if (heroModels.length < 2) return;
     if (!window.matchMedia("(max-width: 767px)").matches) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
     const intervalId = window.setInterval(() => {
-      setPreviousVariantId(selectedVariantId);
+      const currentIndex = heroModels.findIndex((model) => model.id === selectedModel.id);
+      const nextModel = heroModels[(currentIndex + 1) % heroModels.length]!;
+      setPreviousImageSrc(mainImage.src);
       setImageReady(false);
-      setSelectedVariantId((currentId) => {
-        const currentIndex = model01.colourVariants.findIndex(
-          (variant) => variant.id === currentId,
-        );
-        return model01.colourVariants[(currentIndex + 1) % model01.colourVariants.length]!.id;
-      });
+      setSelectedModelId(nextModel.id);
+      setSelectedVariantId(nextModel.colourVariants[0]!.id);
     }, 6500);
 
     return () => window.clearInterval(intervalId);
-  }, [selectedVariantId]);
+  }, [mainImage.src, selectedModel.id]);
 
   function handleTouchStart(event: TouchEvent<HTMLDivElement>) {
     touchStartX.current = event.touches[0]?.clientX ?? null;
@@ -78,7 +83,7 @@ export function CinematicHero({ dictionary, locale }: CinematicHeroProps) {
     if (Math.abs(deltaX) < 48) return;
 
     const direction = (deltaX < 0 ? 1 : -1) * (isArabic ? -1 : 1);
-    cycleVariant(direction as -1 | 1);
+    cycleModel(direction as -1 | 1);
   }
 
   return (
@@ -105,7 +110,7 @@ export function CinematicHero({ dictionary, locale }: CinematicHeroProps) {
               sizes="100vw"
               src="/images/hero-desktop.jpg"
             />
-            {previousVariant && (
+            {previousImageSrc && (
               <Image
                 alt=""
                 aria-hidden="true"
@@ -113,16 +118,16 @@ export function CinematicHero({ dictionary, locale }: CinematicHeroProps) {
                 fill
                 priority
                 sizes="100vw"
-                src={previousVariant.images[0]!.src}
+                src={previousImageSrc}
               />
             )}
             <Image
-              alt={`${getLocalizedField(model01.name, locale)} — ${getLocalizedField(selectedVariant.name, locale)}`}
+              alt={`${getLocalizedField(selectedModel.name, locale)} — ${getLocalizedField(selectedVariant.name, locale)}`}
               className="editorial-hero__image editorial-hero__image--mobile editorial-hero__image--current"
               fill
               onLoad={() => setImageReady(true)}
               onTransitionEnd={() => {
-                if (imageReady) setPreviousVariantId(null);
+                if (imageReady) setPreviousImageSrc(null);
               }}
               priority
               sizes="100vw"
@@ -168,7 +173,7 @@ export function CinematicHero({ dictionary, locale }: CinematicHeroProps) {
               role="group"
               aria-label={dictionary.colour}
             >
-              {model01.colourVariants.map((variant) => {
+              {selectedModel.colourVariants.map((variant) => {
                 const colorName = getLocalizedField(variant.name, locale);
                 return (
                   <button
@@ -199,22 +204,32 @@ export function CinematicHero({ dictionary, locale }: CinematicHeroProps) {
           </div>
         </div>
 
-        <div className="editorial-hero__pagination" role="group" aria-label={dictionary.colour}>
-          {model01.colourVariants.map((variant, index) => (
-            <button
-              aria-label={formatMessage(dictionary.showImage, {
-                current: index + 1,
-                total: model01.colourVariants.length,
-              })}
-              aria-pressed={variant.id === selectedVariant.id}
-              className="editorial-hero__pagination-dot"
-              key={variant.id}
-              onClick={() => selectVariant(variant)}
-              type="button"
-            >
-              <span aria-hidden="true" />
-            </button>
-          ))}
+        <div
+          className="editorial-hero__pagination"
+          role="group"
+          aria-label={isArabic ? "اختيار الموديل" : "Sélection du modèle"}
+        >
+          {heroModels.map((model, index) => {
+            const modelNumber = String(index + 1).padStart(2, "0");
+            const modelName = getLocalizedField(model.name, locale);
+            const modelLabel = isArabic
+              ? `الموديل ${modelNumber} — ${modelName}`
+              : `Modèle ${modelNumber} — ${modelName}`;
+
+            return (
+              <button
+                aria-label={modelLabel}
+                aria-pressed={model.id === selectedModel.id}
+                className="editorial-hero__pagination-dot"
+                key={model.id}
+                onClick={() => selectModel(model)}
+                title={modelLabel}
+                type="button"
+              >
+                <span aria-hidden="true" />
+              </button>
+            );
+          })}
         </div>
       </div>
 
